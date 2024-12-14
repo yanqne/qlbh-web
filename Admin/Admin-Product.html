@@ -75,11 +75,19 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="pagination mt-3">
-                <button class="btn btn-secondary" ng-disabled="currentPage === 1" ng-click="changePage(currentPage - 1)"><</button>
-                <span>Trang {{ currentPage }} / {{ totalPages }}</span>
-                <button class="btn btn-secondary" ng-disabled="currentPage === totalPages" ng-click="changePage(currentPage + 1)">></button>
-            </div>
+            <ul class="pagination justify-content-center">
+                <li class="page-item" ng-class="{ 'disabled': currentPage === 1 }">
+                  <a class="page-link" href="#" ng-click="changePage(currentPage - 1)">Previous</a>
+                </li>
+                <li class="page-item" 
+                    ng-repeat="page in [].constructor(totalPages) track by $index" 
+                    ng-class="{ 'active': currentPage === ($index + 1) }">
+                  <a class="page-link" href="#" ng-click="changePage($index + 1)">{{ $index + 1 }}</a>
+            </li>              
+                <li class="page-item" ng-class="{ 'disabled': currentPage === totalPages }">
+                  <a class="page-link" href="#" ng-click="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
         </section>
 
         <!-- Add Product Form -->

@@ -340,23 +340,26 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
     // Xoá sản phẩm
     $scope.deleteProduct = function (id) {
         if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-            ApiService.delete(`${productApiUrl}/delete/${id}`)
+            ApiService.delete(`http://localhost:8080/admin/product/delete/${id}`)
                 .then(response => {
-                    if (response.data) {
-                        $scope.successMessage = 'Xóa sản phẩm thành công!';
-                        $scope.products = $scope.products.filter(product => product.id !== id);
-                        $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);
-                        $scope.updatePagedProducts(); // Cập nhật sản phẩm theo trang
-                    } else {
-                        $scope.errorMessage = response.data.message || 'Không thể xóa.';
+                    // Xử lý phản hồi không phải JSON
+                    if (typeof response.data === 'string') {
+                        $scope.successMessage = response.data; // Hiển thị thông báo từ server
+                    } else if (response.data.code === 1) {
+                        $scope.successMessage = response.data.message || 'Xóa sản phẩm thành công!';
                     }
+                    // Cập nhật danh sách sản phẩm
+                    $scope.products = $scope.products.filter(product => product.id !== id);
+                    $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);
+                    $scope.updatePagedProducts();
                 })
                 .catch(error => {
-                    console.error('Lỗi khi xóa sản phẩm:', error);
+                    console.error('Lỗi khi xóa:', error);
                     $scope.errorMessage = 'Lỗi khi thực hiện xóa.';
                 });
         }
     };
+    
 
     // Sửa sản phẩm
     $scope.editProduct = function (product) {
