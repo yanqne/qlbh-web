@@ -342,25 +342,30 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
         if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
             ApiService.delete(`http://localhost:8080/admin/product/delete/${id}`)
                 .then(response => {
-                    // Xử lý phản hồi không phải JSON
-                    if (typeof response.data === 'string') {
-                        $scope.successMessage = response.data; // Hiển thị thông báo từ server
-                    } else if (response.data.code === 1) {
-                        $scope.successMessage = response.data.message || 'Xóa sản phẩm thành công!';
+                    // Kiểm tra phản hồi JSON từ server
+                    if (response.data && response.data.message) {
+                        $scope.successMessage = response.data.message; // Hiển thị thông báo từ server
+                        $scope.products = $scope.products.filter(product => product.id !== id);
+                        $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);
+                        $scope.updatePagedProducts(); // Cập nhật sản phẩm theo trang
+                    } else {
+                        $scope.errorMessage = 'Không thể xóa.';
                     }
-                    // Cập nhật danh sách sản phẩm
-                    $scope.products = $scope.products.filter(product => product.id !== id);
-                    $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);
-                    $scope.updatePagedProducts();
                 })
                 .catch(error => {
-                    console.error('Lỗi khi xóa:', error);
-                    $scope.errorMessage = 'Lỗi khi thực hiện xóa.';
+                    // Xử lý lỗi từ server
+                    if (error.status === 404) {
+                        $scope.errorMessage = `Không tìm thấy sản phẩm với ID ${id}.`;
+                    } else if (error.status === 500) {
+                        $scope.errorMessage = 'Lỗi máy chủ. Không thể xóa sản phẩm.';
+                    } else {
+                        $scope.errorMessage = 'Có lỗi xảy ra. Vui lòng thử lại.';
+                    }
+                    console.error('Lỗi khi xóa sản phẩm:', error);
                 });
         }
     };
     
-
     // Sửa sản phẩm
     $scope.editProduct = function (product) {
         $scope.editableProduct = angular.copy(product); // Sao chép sản phẩm vào đối tượng chỉnh sửa
