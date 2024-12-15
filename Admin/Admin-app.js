@@ -1,39 +1,73 @@
 var app = angular.module('myApp', []); // Tạo module duy nhất
+app.directive('fileModel', ['$parse', function ($parse) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attrs) {
+            var model = $parse(attrs.fileModel);
+            var modelSetter = model.assign;
+
+            element.bind('change', function () {
+                scope.$apply(function () {
+                    modelSetter(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+}]);
+
+
 
 const categoryApiUrl = 'http://localhost:8080/admin/categories/index';
 const productApiUrl = 'http://localhost:8080/admin/product/index';
 const userApiUrl = 'http://localhost:8080/admin/account';
-app.service('ApiService', ['$http', '$window', function ($http,$window) {
+app.service('ApiService', ['$http', '$window', function ($http, $window) {
     const token = $window.localStorage.getItem('token');
 
     // Cấu hình mặc định cho tất cả các yêu cầu HTTP
     const defaultHeaders = token ? {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json' 
-    } : {
-        'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + token
+    } : {};
+
+    // POST request
+    this.post = function (url, data, config = {}) {
+        // Kiểm tra nếu data là FormData thì không thiết lập Content-Type
+        if (data instanceof FormData) {
+            // Nếu là FormData, không cần chỉ định Content-Type vì AngularJS sẽ tự động thiết lập là multipart/form-data
+            config.headers = config.headers || {};
+            config.headers['Content-Type'] = undefined;  // Để AngularJS tự thiết lập Content-Type là multipart/form-data
+        } else {
+            // Nếu không phải FormData, thiết lập Content-Type là application/json
+            config.headers = config.headers || {};
+            config.headers['Content-Type'] = 'application/json';
+        }
+
+        return $http.post(url, data, config);
     };
 
-    // GET request
+    // Các phương thức khác (GET, DELETE, PUT)
     this.get = function (url) {
         return $http.get(url, { headers: defaultHeaders });
     };
 
-    // POST request
-    this.post = function (url, data) {
-        return $http.post(url, data, { headers: defaultHeaders });
-    };
-
-    // DELETE request
     this.delete = function (url) {
         return $http.delete(url, { headers: defaultHeaders });
     };
 
-    // PUT request
-    this.put = function (url, data) {
-        return $http.put(url, data, { headers: defaultHeaders });
+    this.put = function (url, data,config = {}) {
+        if (data instanceof FormData) {
+            // Nếu là FormData, không cần chỉ định Content-Type vì AngularJS sẽ tự động thiết lập là multipart/form-data
+            config.headers = config.headers || {};
+            config.headers['Content-Type'] = undefined;  // Để AngularJS tự thiết lập Content-Type là multipart/form-data
+        } else {
+            // Nếu không phải FormData, thiết lập Content-Type là application/json
+            config.headers = config.headers || {};
+            config.headers['Content-Type'] = 'application/json';
+        }
+
+        return $http.put(url, data, config);
     };
 }]);
+
 
 // Controller quản trị
 // app.controller('AdminController', ['$scope', '$http', function ($scope, $http) {
@@ -67,7 +101,7 @@ app.controller('CategoryController', ['$scope', 'ApiService', function ($scope, 
     // Lấy danh sách danh mục
     ApiService.get(categoryApiUrl)
         .then(function (response) {
-            $scope.categories = response.data.content; // Gắn danh sách danh mục
+            $scope.categories = response.data; // Gắn danh sách danh mục
         })
         .catch(function (error) {
             console.error('Lỗi khi gọi API danh mục:', error);
@@ -310,37 +344,109 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
             $scope.updatePagedProducts();
         }
     };
-
-    // Hàm thêm sản phẩm mới
     $scope.addProduct = function () {
-        if ($scope.addProductForm.$valid) {
-            ApiService.post(productApiUrl, $scope.newProduct)
-                .then(function (response) {
-                    if (response.data) {
-                        $scope.successMessage = 'Sản phẩm đã được thêm thành công!';
-                        $scope.newProduct = {}; // Làm sạch form
-                        $scope.products.push(response.data); // Thêm sản phẩm vào danh sách
-                        $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);
-                        $scope.updatePagedProducts(); // Cập nhật sản phẩm theo trang
-                        alert('Sản phẩm đã được thêm thành công!');
-                    } else {
-                        alert("Lỗi khi thêm sản phẩm");
-                        $scope.errorMessage = response.data.message || 'Lỗi khi thêm sản phẩm.';
-                    }
-                })
-                .catch(function (error) {
-                    console.error('Lỗi khi thêm sản phẩm:', error);
-                    $scope.errorMessage = 'Lỗi khi gửi dữ liệu';
-                });
+        var formData = new FormData();
+        formData.append("name", $scope.newProduct.name);
+        formData.append("description", $scope.newProduct.description);
+        formData.append("categoryId", $scope.newProduct.categoryId);
+        formData.append("price", $scope.newProduct.price);
+        formData.append("quality", $scope.newProduct.quality);
+    
+        // Kiểm tra xem có tệp không và thêm vào FormData
+        if ($scope.newProduct.images) {
+            formData.append("images", $scope.newProduct.images);
         } else {
-            $scope.errorMessage = 'Vui lòng kiểm tra lại thông tin nhập.';
+            console.error("No image selected.");
+            alert("Vui lòng chọn một tệp hình ảnh.");
+            return;
         }
+    
+        // Gửi FormData qua API
+        ApiService.post("http://localhost:8080/admin/product/add", formData)
+        .then(function (response) {
+            alert('Sản phẩm đã được thêm thành công!');
+            $scope.newProduct = {}; // Reset form
+    
+            // Sau khi thêm thành công, gọi lại API để tải danh sách sản phẩm mới
+            ApiService.get("http://localhost:8080/admin/product/index")
+            .then(function (response) {
+                $scope.products = response.data;  // Cập nhật danh sách sản phẩm
+                $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);  // Cập nhật số trang
+                $scope.updatePagedProducts();  // Cập nhật sản phẩm theo trang
+            })
+            .catch(function (error) {
+                console.error('Lỗi khi tải lại sản phẩm:', error);
+                alert('Error while loading products: ' + (error.data.message || error.statusText));
+            });
+        })
+        .catch(function (error) {
+            console.error('Lỗi khi thêm sản phẩm:', error);
+            var errorMessage = error.data?.message || error.statusText || "Đã xảy ra lỗi khi thêm sản phẩm.";
+            alert(errorMessage);
+        });
     };
+    
+    $scope.updateProduct = function () {
+        if ($scope.newProduct.quality == null || $scope.newProduct.quality < 1) {
+            alert('Số lượng (Quality) phải lớn hơn hoặc bằng 1.');
+            return;
+        }
+    
+        var formData = new FormData();
+        formData.append("name", $scope.newProduct.name);
+        formData.append("description", $scope.newProduct.description);
+        formData.append("categoryId", $scope.newProduct.categoryId);
+        formData.append("price", $scope.newProduct.price);
+        formData.append("quality", $scope.newProduct.quality);
+    
+        // Kiểm tra xem có tệp hình ảnh không và thêm vào FormData
+        if ($scope.newProduct.images) {
+            formData.append("images", $scope.newProduct.images);  
+        } else {
+            alert("Vui lòng chọn một tệp hình ảnh.");
+            return;
+        }
+        console.log(formData)
+        // Truyền ID sản phẩm cần cập nhật
+        formData.append("id", $scope.newProduct.id);
+    
+        // Gửi FormData qua API
+        ApiService.put("http://localhost:8080/admin/product/update", formData)
+        .then(function (response) {
+            if (!response.data || !response.data.product) {
+                alert('Không có dữ liệu cập nhật từ server.');
+                return;
+            }
+    
+            // Cập nhật sản phẩm trong danh sách
+            var updatedProduct = response.data.product;
+            var index = $scope.products.findIndex(product => product.id === updatedProduct.id);
+            if (index !== -1) {
+                $scope.products[index] = updatedProduct;
+            }
+    
+            // Làm mới trang sau khi cập nhật
+            $scope.updatePagedProducts();
+            alert('Sản phẩm đã được cập nhật thành công!');
+            $scope.newProduct = {}; // Reset form
+        })
+        .catch(function (error) {
+            console.error('Lỗi khi cập nhật sản phẩm:', error);
+            var errorMessage = error.data?.message || error.statusText || "Đã xảy ra lỗi khi cập nhật sản phẩm.";
+            alert(errorMessage);
+        });
+    };
+    
+    
+    
+    
+    
+    
 
     // Xoá sản phẩm
     $scope.deleteProduct = function (id) {
         if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-            ApiService.delete(`${productApiUrl}/delete/${id}`)
+            ApiService.delete(`http://localhost:8080/admin/product/delete/${id}`)
                 .then(response => {
                     if (response.data) {
                         $scope.successMessage = 'Xóa sản phẩm thành công!';
@@ -363,35 +469,11 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
         $scope.editableProduct = angular.copy(product); // Sao chép sản phẩm vào đối tượng chỉnh sửa
         $scope.newProduct = angular.copy(product); // Đổ dữ liệu vào form
     };
-
-    // Cập nhật sản phẩm
-    $scope.updateProduct = function () {
-        if ($scope.addProductForm.$valid) {
-            ApiService.put(`${productApiUrl}/${$scope.newProduct.id}`, $scope.newProduct)
-                .then(function (response) {
-                    if (response.data) {
-                        $scope.successMessage = 'Cập nhật sản phẩm thành công!';
-                        // Cập nhật sản phẩm trong danh sách
-                        const index = $scope.products.findIndex(p => p.id === $scope.newProduct.id);
-                        if (index !== -1) {
-                            $scope.products[index] = response.data;
-                        }
-                        $scope.newProduct = {}; // Reset form
-                        $scope.editableProduct = null; // Hủy trạng thái chỉnh sửa
-                        $scope.updatePagedProducts(); // Cập nhật sản phẩm theo trang
-                    } else {
-                        $scope.errorMessage = response.data.message || 'Không thể cập nhật sản phẩm.';
-                    }
-                })
-                .catch(function (error) {
-                    console.error('Lỗi khi cập nhật sản phẩm:', error);
-                    $scope.errorMessage = 'Lỗi khi gửi dữ liệu.';
-                });
-        } else {
-            $scope.errorMessage = 'Vui lòng kiểm tra lại thông tin nhập.';
-        }
-    };
-
+    
+    
+    
+    
+    
     // Hủy chỉnh sửa sản phẩm
     $scope.cancelEdit = function () {
         $scope.newProduct = {}; // Xóa dữ liệu trong form

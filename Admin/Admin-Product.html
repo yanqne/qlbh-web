@@ -85,40 +85,48 @@
         <!-- Add Product Form -->
         <section id="addProduct" class="mt-5">
             <h2>{{ editableProduct ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới' }}</h2>
-            <form name="addProductForm" ng-submit="editableProduct ? updateProduct() : addProduct()" novalidate>
+            <form name="addProductForm" ng-submit="editableProduct ? updateProduct() : addProduct()" novalidate enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="productName" class="form-label">Product Name</label>
                     <input type="text" class="form-control" id="productName" ng-model="newProduct.name" placeholder="Enter product name" required>
                 </div>
+
                 <div class="mb-3">
                     <label for="productDescription" class="form-label">Description</label>
                     <input type="text" class="form-control" id="productDescription" ng-model="newProduct.description" placeholder="Enter product description" required>
                 </div>
+
                 <div class="mb-3">
                     <label for="productCategory" class="form-label">Category</label>
-                    <select id="categoryId" class="form-control" 
-                            ng-model="newProduct.categoryId" 
-                            ng-options="category.id as category.name for category in categories" required>
+                    <select id="categoryId" class="form-control" ng-model="newProduct.categoryId" ng-options="category.id as category.name for category in categories" required>
                         <option value="" disabled>Chọn danh mục</option>
                     </select>
                 </div>
+
                 <div class="mb-3">
                     <label for="productPrice" class="form-label">Price ($)</label>
                     <input type="number" class="form-control" id="productPrice" ng-model="newProduct.price" placeholder="Enter price" required>
                 </div>
+
                 <div class="mb-3">
                     <label for="productStock" class="form-label">Stock</label>
                     <input type="number" class="form-control" id="productStock" ng-model="newProduct.quality" placeholder="Enter stock quantity" required>
                 </div>
+
+                <!-- Input for file upload -->
                 <div class="mb-3">
-                    <label for="imageUrl" class="form-label">Image URL</label>
-                    <input type="text" id="imageUrl" class="form-control" ng-model="newProduct.image" placeholder="Enter image URL" required>
+                    <label for="productImage" class="form-label">Image</label>
+                    <input type="file" class="form-control" id="productImages" file-model="newProduct.images" accept="image/*" required>
                 </div>
-                <button type="submit" class="btn btn-primary">{{ editableProduct ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm' }}</button>
+
+                <button type="submit" class="btn btn-primary">
+                    {{ editableProduct ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm' }}
+                </button>
+
                 <button type="button" class="btn btn-secondary" ng-if="editableProduct" ng-click="cancelEdit()">Hủy</button>
             </form>
         </section>
-        
+
     </div>
 
     <!-- Bootstrap JS -->
