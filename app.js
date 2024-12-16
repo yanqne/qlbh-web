@@ -19,8 +19,8 @@ app.directive('navigationSection', function(){
         templateUrl: 'navigation.html'
     };
 })
-const categoryUrl='http://localhost:8080/admin/category'
-const productUrl='http://localhost:8080/admin/product';
+const categoryUrl='http://localhost:8080/admin/categories/index'
+const productUrl='http://localhost:8080/admin/product/index';
 // Service để xử lý API
 app.service('ApiService', ['$http', function ($http) {
     this.get = function (url) {
@@ -41,8 +41,8 @@ app.controller('FilterProductController', ['$scope', '$http', function ($scope, 
     // Lấy danh sách danh mục từ API
     $http.get(categoryUrl)
         .then(function (response) {
-            if (response.data && response.data.content) {
-                $scope.categories = response.data.content; // Gán danh sách danh mục vào scope
+            if (response.data && response.data) {
+                $scope.categories = response.data; // Gán danh sách danh mục vào scope
             } else {
                 console.error('Dữ liệu danh mục không hợp lệ:', response.data);
             }
@@ -92,7 +92,7 @@ app.controller('ProductDetailController', ['$scope', '$location', 'ApiService', 
 
     // Kiểm tra và tải thông tin sản phẩm
     if (productId) {
-        ApiService.get(`${productUrl}/${productId}`)
+        ApiService.get(`http://localhost:8080/admin/product/edit/${productId}`)
             .then(function (response) {
                 if (response.data) {
                     $scope.product = response.data;
@@ -107,29 +107,33 @@ app.controller('ProductDetailController', ['$scope', '$location', 'ApiService', 
     } else {
         $scope.errorMessage = 'Không tìm thấy sản phẩm.';
     }
-
-    // Thêm sản phẩm vào giỏ hàng
-    // $scope.addToCart = function () {
-    //     try {
-    //         if ($scope.product) {
-    //             // Kiểm tra nếu người dùng chưa đăng nhập
-    //             const loggedInUser = localStorage.getItem('loggedInUser');
-    //             if (!loggedInUser) {
-    //                 alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
-    //                 return;
-    //             }
-
-    //             // Gửi sản phẩm vào giỏ hàng
-    //             CartService.addToCart({
-    //                 id: $scope.product.id,
-    //                 name: $scope.product.name,
-    //                 price: $scope.product.price
-    //             });
-    //             $scope.successMessage = `Sản phẩm "${$scope.product.name}" đã được thêm vào giỏ hàng!`;
-    //         }
-    //     } catch (error) {
-    //         console.error('Lỗi khi thêm sản phẩm vào giỏ hàng:', error);
-    //         $scope.errorMessage = 'Lỗi khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại!';
-    //     }
-    // };
 }]);
+app.controller('LogoutController', function($scope, $window) {
+    // Hàm logout
+    $scope.logout = function() {
+        // Xóa token khỏi localStorage
+        localStorage.removeItem('token');
+        
+        // Chuyển hướng về trang đăng nhập
+        $window.location.href = '/login-register.html';
+    };
+});
+app.controller('AuthController', function($scope, $window) {
+    // Kiểm tra nếu có token trong localStorage hoặc sessionStorage
+    $scope.isLoggedIn = $window.localStorage.getItem('authToken') !== null;  // Kiểm tra token
+
+    // Hàm logout
+    $scope.logout = function() {
+        // Xóa token khi logout
+        $window.localStorage.removeItem('authToken');
+        $scope.isLoggedIn = false;  // Cập nhật trạng thái đăng nhập
+        // Các bước logout khác nếu cần, ví dụ gọi API logout...
+    };
+
+    // Hàm login (giả sử bạn lấy token từ server và lưu vào localStorage)
+    $scope.login = function(token) {
+        // Giả sử đăng nhập thành công và nhận được token từ server
+        $window.localStorage.setItem('authToken', token);  // Lưu token vào localStorage
+        $scope.isLoggedIn = true;
+    };
+});

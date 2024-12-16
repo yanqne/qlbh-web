@@ -471,7 +471,7 @@ app.controller('LogoutController', function($scope, $window) {
         localStorage.removeItem('token');
         
         // Chuyển hướng về trang đăng nhập
-        $window.location.href = '/login-register.html';
+        $window.location.href = 'login-register.html';
     };
 });
 

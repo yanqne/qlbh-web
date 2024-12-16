@@ -36,8 +36,7 @@
                         <a class="nav-link" href="Admin-Order.html">Đơn hàng</a>
                     </li>
                 </ul>
-                <span class="ms-auto text-light">Xin chào, {{ loggedInUser.fullName }}</span>
-                <button class="btn btn-light ms-3" ng-click="logout()">Đăng xuất</button>
+                    <button class="btn btn-danger ms-3" ng-controller="LogoutController" ng-click="logout()">Logout</button>
             </div>
         </div>
     </nav>
@@ -67,7 +66,7 @@
                         <td>{{product.image}}</td>
                         <td>{{product.price}}</td>
                         <td>{{product.createDate}}</td>
-                        <td>{{product.category.name}}</td>
+                        <td>{{product.category.id}}</td>
                         <td>
                             <button class="btn btn-warning btn-sm" ng-click="editProduct(product)">Sửa</button>
                             <button class="btn btn-danger btn-sm" ng-click="deleteProduct(product.id)">Xoá</button>
