@@ -65,24 +65,24 @@
                                         <h5>${{ cart.totalAmount.toFixed(2) }}</h5>
                                     </div>
                                     <div class="cart-btns">
-                                        <a href="#">View Cart</a>
+                                        <a href="cart.html">View Cart</a>
                                         <a href="#">Checkout <i class="fa fa-arrow-circle-right"></i></a>
                                     </div>
                                 </div>
                             </div>
                             <div ng-controller="HeaderController">
-                                <div ng-show="!isLoggedIn">
-                                    <a href="/login-register.html">
+                                
+                                    <a href="/login-register.html" ng-show="!isLoggedIn">
                                         <i class="fa fa-user-o"></i>
                                         <span>Login/Resgiter</span>
                                     </a>
-                                </div>
-                                <div ng-show="isLoggedIn">
-                                    <a href="#" ng-click="logout()">
+                                
+                                
+                                    <a href="#" ng-click="logout()" ng-show="isLoggedIn">
                                         <i class="fa fa-user-o"></i>
                                         <span>Logout</span>
                                     </a>
-                                </div>
+                                
                             </div>
 
                             <!-- Menu Toogle -->

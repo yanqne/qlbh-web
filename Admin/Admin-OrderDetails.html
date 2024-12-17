@@ -35,17 +35,20 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="Admin-Order.html">Đơn hàng</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="thongke.html">Thống kê</a>
+                    </li>
                 </ul>
                 <span class="ms-auto text-light"></span>
-                <button class="btn btn-danger ms-3"ng-controller="LogoutController" ng-click="logout()">Logout</button>
+                <button class="btn btn-danger ms-3" ng-controller="LogoutController" ng-click="logout()">Logout</button>
             </div>
         </div>
     </nav>
     <button onclick="goBack()" style="display: inline-flex; align-items: center; justify-content: center; 
     width: 50px; height: 50px; border: 1px solid #ddd; border-radius: 50%; 
     background-color: #ffffff; cursor: pointer; transition: all 0.3s ease; font-size: 20px; color: #6c757d;">
-    <i class="fas fa-arrow-left"></i>
-</button>
+        <i class="fas fa-arrow-left"></i>
+    </button>
     <div class="container mt-5" ng-controller="OrderDetailController">
         <h1 class="text-center">Chi Tiết Đơn Hàng</h1>
 
@@ -100,4 +103,5 @@
         window.history.back();
     }
 </script>
+
 </html>

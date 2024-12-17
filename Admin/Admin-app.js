@@ -54,7 +54,7 @@ app.service('ApiService', ['$http', '$window', function ($http, $window) {
         return $http.delete(url, { headers: defaultHeaders });
     };
 
-    this.put = function (url, data,config = {}) {
+    this.put = function (url, data, config = {}) {
         if (data instanceof FormData) {
             // Nếu là FormData, không cần chỉ định Content-Type vì AngularJS sẽ tự động thiết lập là multipart/form-data
             config.headers = config.headers || {};
@@ -295,9 +295,9 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
             console.error('Lỗi khi gọi API sản phẩm:', error);
             $scope.errorMessage = 'Không thể tải danh sách sản phẩm.';
         });
-        $scope.setTab = function (tab) {
-            $scope.activeTab = tab;
-        };    
+    $scope.setTab = function (tab) {
+        $scope.activeTab = tab;
+    };
     // Lấy danh sách danh mục
     ApiService.get(categoryApiUrl)
         .then(response => {
@@ -328,7 +328,7 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
         formData.append("categoryId", $scope.newProduct.categoryId);
         formData.append("price", $scope.newProduct.price);
         formData.append("quality", $scope.newProduct.quality);
-    
+
         // Kiểm tra xem có tệp không và thêm vào FormData
         if ($scope.newProduct.images) {
             formData.append("images", $scope.newProduct.images);
@@ -337,48 +337,48 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
             alert("Vui lòng chọn một tệp hình ảnh.");
             return;
         }
-    
+
         // Gửi FormData qua API
         ApiService.post("http://localhost:8080/admin/product/add", formData)
-        .then(function (response) {
-            alert('Sản phẩm đã được thêm thành công!');
-            $scope.newProduct = {}; // Reset form
-    
-            // Sau khi thêm thành công, gọi lại API để tải danh sách sản phẩm mới
-            ApiService.get("http://localhost:8080/admin/product/index")
             .then(function (response) {
-                $scope.products = response.data;  // Cập nhật danh sách sản phẩm
-                $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);  // Cập nhật số trang
-                $scope.updatePagedProducts();  // Cập nhật sản phẩm theo trang
+                alert('Sản phẩm đã được thêm thành công!');
+                $scope.newProduct = {}; // Reset form
+
+                // Sau khi thêm thành công, gọi lại API để tải danh sách sản phẩm mới
+                ApiService.get("http://localhost:8080/admin/product/index")
+                    .then(function (response) {
+                        $scope.products = response.data;  // Cập nhật danh sách sản phẩm
+                        $scope.totalPages = Math.ceil($scope.products.length / $scope.pageSize);  // Cập nhật số trang
+                        $scope.updatePagedProducts();  // Cập nhật sản phẩm theo trang
+                    })
+                    .catch(function (error) {
+                        console.error('Lỗi khi tải lại sản phẩm:', error);
+                        alert('Error while loading products: ' + (error.data.message || error.statusText));
+                    });
             })
             .catch(function (error) {
-                console.error('Lỗi khi tải lại sản phẩm:', error);
-                alert('Error while loading products: ' + (error.data.message || error.statusText));
+                console.error('Lỗi khi thêm sản phẩm:', error);
+                var errorMessage = error.data?.message || error.statusText || "Đã xảy ra lỗi khi thêm sản phẩm.";
+                alert(errorMessage);
             });
-        })
-        .catch(function (error) {
-            console.error('Lỗi khi thêm sản phẩm:', error);
-            var errorMessage = error.data?.message || error.statusText || "Đã xảy ra lỗi khi thêm sản phẩm.";
-            alert(errorMessage);
-        });
     };
-    
+
     $scope.updateProduct = function () {
         if ($scope.newProduct.quality == null || $scope.newProduct.quality < 1) {
             alert('Số lượng (Quality) phải lớn hơn hoặc bằng 1.');
             return;
         }
-    
+
         var formData = new FormData();
         formData.append("name", $scope.newProduct.name);
         formData.append("description", $scope.newProduct.description);
         formData.append("categoryId", $scope.newProduct.categoryId);
         formData.append("price", $scope.newProduct.price);
         formData.append("quality", $scope.newProduct.quality);
-    
+
         // Kiểm tra xem có tệp hình ảnh không và thêm vào FormData
         if ($scope.newProduct.images) {
-            formData.append("images", $scope.newProduct.images);  
+            formData.append("images", $scope.newProduct.images);
         } else {
             alert("Vui lòng chọn một tệp hình ảnh.");
             return;
@@ -386,32 +386,32 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
         console.log(formData)
         // Truyền ID sản phẩm cần cập nhật
         formData.append("id", $scope.newProduct.id);
-    
+
         // Gửi FormData qua API
         ApiService.put("http://localhost:8080/admin/product/update", formData)
-        .then(function (response) {
-            if (!response.data || !response.data.product) {
-                alert('Không có dữ liệu cập nhật từ server.');
-                return;
-            }
-    
-            // Cập nhật sản phẩm trong danh sách
-            var updatedProduct = response.data.product;
-            var index = $scope.products.findIndex(product => product.id === updatedProduct.id);
-            if (index !== -1) {
-                $scope.products[index] = updatedProduct;
-            }
-    
-            // Làm mới trang sau khi cập nhật
-            $scope.updatePagedProducts();
-            alert('Sản phẩm đã được cập nhật thành công!');
-            $scope.newProduct = {}; // Reset form
-        })
-        .catch(function (error) {
-            console.error('Lỗi khi cập nhật sản phẩm:', error);
-            var errorMessage = error.data?.message || error.statusText || "Đã xảy ra lỗi khi cập nhật sản phẩm.";
-            alert(errorMessage);
-        });
+            .then(function (response) {
+                if (!response.data || !response.data.product) {
+                    alert('Không có dữ liệu cập nhật từ server.');
+                    return;
+                }
+
+                // Cập nhật sản phẩm trong danh sách
+                var updatedProduct = response.data.product;
+                var index = $scope.products.findIndex(product => product.id === updatedProduct.id);
+                if (index !== -1) {
+                    $scope.products[index] = updatedProduct;
+                }
+
+                // Làm mới trang sau khi cập nhật
+                $scope.updatePagedProducts();
+                alert('Sản phẩm đã được cập nhật thành công!');
+                $scope.newProduct = {}; // Reset form
+            })
+            .catch(function (error) {
+                console.error('Lỗi khi cập nhật sản phẩm:', error);
+                var errorMessage = error.data?.message || error.statusText || "Đã xảy ra lỗi khi cập nhật sản phẩm.";
+                alert(errorMessage);
+            });
     };
 
     // Xoá sản phẩm
@@ -442,17 +442,17 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
                 });
         }
     };
-    
+
     // Sửa sản phẩm
     $scope.editProduct = function (product) {
         $scope.editableProduct = angular.copy(product); // Sao chép sản phẩm vào đối tượng chỉnh sửa
         $scope.newProduct = angular.copy(product); // Đổ dữ liệu vào form
     };
-    
-    
-    
-    
-    
+
+
+
+
+
     // Hủy chỉnh sửa sản phẩm
     $scope.cancelEdit = function () {
         $scope.newProduct = {}; // Xóa dữ liệu trong form
@@ -479,16 +479,72 @@ app.controller('OrderController', ['$scope', 'ApiService', function ($scope, Api
     };
 }]);
 // Khởi tạo controller mới
-app.controller('LogoutController', function($scope, $window) {
+app.controller('LogoutController', function ($scope, $window) {
     // Hàm logout
-    $scope.logout = function() {
+    $scope.logout = function () {
         // Xóa token khỏi localStorage
         localStorage.removeItem('token');
-        
+
         // Chuyển hướng về trang đăng nhập
         $window.location.href = '/login-register.html';
     };
 });
+app.controller('StatisticsController', function ($scope, $http) {
+    $scope.stats = {};  // Biến để chứa dữ liệu thống kê
+    $scope.errorMessage = ''; // Biến để chứa thông báo lỗi
 
+    // Hàm tải thống kê từ API
+    $scope.loadStatistics = function () {
+        $http.get('http://localhost:8080/admin/statistics')
+            .then(function (response) {
+                // Lưu dữ liệu trả về từ API vào scope
+                $scope.stats = response.data;
+                // Vẽ biểu đồ
+                drawChart($scope.stats);
+            })
+            .catch(function (error) {
+                // Xử lý lỗi nếu có
+                $scope.errorMessage = 'Không thể tải thống kê. Vui lòng thử lại!';
+                console.error('Lỗi khi lấy dữ liệu thống kê:', error);
+            });
+    };
+
+    // Tải thống kê ngay khi controller khởi tạo
+    $scope.loadStatistics();
+
+    // Hàm vẽ biểu đồ
+    function drawChart(data) {
+        var ctx = document.getElementById('statisticsChart').getContext('2d');
+
+        var chart = new Chart(ctx, {
+            type: 'bar',  // Loại biểu đồ (cột)
+            data: {
+                labels: ['Total Orders', 'Total Products', 'Total Users'], // Nhãn của các cột
+                datasets: [{
+                    label: 'Statistics',
+                    data: [data.totalOrders, data.TotalProducts, data.totalUsers], // Dữ liệu thống kê
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+});
 
 

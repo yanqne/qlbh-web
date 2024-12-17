@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistics with Chart</title>
+  <!-- Đưa Chart.js vào -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="Admin-app.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .error {
+      color: red;
+      font-size: 1.2em;
+    }
+
+    .stat-item {
+      display: inline-block;
+      margin: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      width: 200px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-item h3 {
+      margin-bottom: 10px;
+    }
+
+    .stat-item p {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    canvas {
+      max-width: 800px; /* Tăng kích thước tối đa */
+      height: 400px; /* Đặt chiều cao cố định */
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="Admin-Product.html">Sản phẩm</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="Admin-Category.html">Danh mục</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="Admin-Account.html">Tài khoản</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="Admin-Order.html">Đơn hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="thongke.html">Thống kê</a>
+                    </li>
+                </ul>
+                <span class="ms-auto text-light"></span>
+                <button class="btn btn-danger ms-3"ng-controller="LogoutController" ng-click="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+  <div  ng-controller="StatisticsController">
+    <h2>Thống kê</h2>
+
+    <!-- Hiển thị thông báo lỗi nếu có -->
+    <div ng-if="errorMessage" class="error">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Hiển thị dữ liệu thống kê -->
+    <div ng-if="stats.totalOrders || stats.TotalProducts || stats.totalUsers">
+      <div class="stat-item">
+        <h3>Tổng đơn đã đặt</h3>
+        <p>{{ stats.totalOrders }}</p>
+      </div>
+      <div class="stat-item">
+        <h3>Tổng sản phẩm</h3>
+        <p>{{ stats.TotalProducts }}</p>
+      </div>
+      <div class="stat-item">
+        <h3>Tổng số người dùng</h3>
+        <p>{{ stats.totalUsers }}</p>
+      </div>
+    </div>
+
+    <!-- Biểu đồ thống kê -->
+    <canvas id="statisticsChart"></canvas>
+  </div>
+</body>
+</html>

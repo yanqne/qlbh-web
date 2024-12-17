@@ -6,7 +6,6 @@ app.directive('headerSection', function() {
         templateUrl: 'header.html'
     };
 });
-
 app.directive('footerSection', function() {
     return {
         restrict: 'E',
@@ -164,7 +163,7 @@ app.controller('LogoutController', function($scope, $window) {
         $window.location.href = '/login-register.html';
     };
 });
-app.controller('HeaderController', ['$scope', function ($scope) {
+app.controller('HeaderController', ['$scope','CartService', function ($scope,CartService) {
     // Kiểm tra trạng thái đăng nhập
     $scope.isLoggedIn = false; // Giá trị mặc định là chưa đăng nhập
 
@@ -175,10 +174,14 @@ app.controller('HeaderController', ['$scope', function ($scope) {
     }
 
     // Hàm logout
-    $scope.logout = function () {
-        localStorage.removeItem('token'); // Xóa token người dùng
-        alert('Bạn đã đăng xuất thành công!');
-        window.location.href = 'login-register.html'; // Chuyển về trang đăng nhập
+    $scope.logout = function() {
+        // Lưu giỏ hàng hiện tại vào key cố định
+        const currentCart = CartService.getCart().items;
+        localStorage.setItem('guest_cart', JSON.stringify(currentCart));
+    
+        // Xóa token khỏi localStorage
+        localStorage.removeItem('token');
+        $scope.isLoggedIn = false; // Người dùng đã đăng xuất
     };
 }]);
 app.service('CartService', function () {
@@ -245,26 +248,31 @@ app.service('CartService', function () {
     };
 
     // Hàm reset token khi người dùng đăng nhập lại
-    this.setToken = function (newToken) {
-        token = newToken; // Cập nhật token
-        loadCart(); // Load giỏ hàng mới dựa trên token
+    this.setToken = function(newToken) {
+        token = newToken;
+        const guestCart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+        loadCart(); // Tải giỏ hàng từ token mới
+        guestCart.forEach(product => this.addToCart(product)); // Hợp nhất giỏ hàng cũ
+        localStorage.removeItem('guest_cart'); // Xóa dữ liệu cũ
     };
 });
 app.controller('CartController', ['$scope', '$http', 'CartService', '$window', function ($scope, $http, CartService, $window) {
     $scope.products = []; // Danh sách sản phẩm
     $scope.errorMessage = null; // Thông báo lỗi
- 
+
     // Lấy danh sách sản phẩm từ API
     $http.get(productUrl)
         .then(function (response) {
-            $scope.products = response.data; // Gán danh sách sản phẩm vào scope
+            $scope.products = response.data.data; // Gán danh sách sản phẩm vào scope
         })
         .catch(function (error) {
             console.error('Lỗi khi gọi API:', error);
             $scope.errorMessage = 'Không thể tải danh sách sản phẩm. Vui lòng thử lại sau!';
         });
+
     // Lấy giỏ hàng từ CartService
     $scope.cart = CartService.getCart();
+
     // Thêm sản phẩm vào giỏ hàng
     $scope.addToCart = function (product) {
         CartService.addToCart(product);
@@ -310,21 +318,14 @@ app.controller('CartController', ['$scope', '$http', 'CartService', '$window', f
             return;
         }
     
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-        if (!loggedInUser) {
-            alert('Vui lòng đăng nhập trước khi đặt hàng.');
-            return;
-        }
-    
         // Tính tổng tiền
         const totalAmount = $scope.cart.items.reduce(
-            (sum, item) => sum + item.price * item.quantity,  // Tính tổng giá tiền của tất cả sản phẩm trong giỏ hàng
+            (sum, item) => sum + item.price * item.quantity, // Tính tổng giá tiền của tất cả sản phẩm trong giỏ hàng
             0
         );
     
         // Chuẩn bị dữ liệu order
         const orderData = {
-            userId: loggedInUser.id,
             totalAmount: totalAmount,
             createOrderDetails: $scope.cart.items.map(item => ({
                 productId: item.id,
@@ -333,8 +334,15 @@ app.controller('CartController', ['$scope', '$http', 'CartService', '$window', f
         };
     
         const token = $window.localStorage.getItem('token');
+        
+        // Kiểm tra nếu token đã tồn tại
+        if (!token) {
+            alert('Phiên đăng nhập của bạn đã hết hạn hoặc không tồn tại. Vui lòng đăng nhập lại!');
+            return;
+        }
+    
         // Gửi API để tạo đơn hàng
-        $http.post('http://localhost:5000/api/order', orderData,{
+        $http.post('http://localhost:8080/order/create', orderData, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
@@ -357,7 +365,12 @@ app.controller('CartController', ['$scope', '$http', 'CartService', '$window', f
         })
         .catch(function (error) {
             console.error('Lỗi khi đặt hàng:', error);
-            $scope.errorMessage = 'Lỗi khi xử lý đơn hàng. Vui lòng thử lại!';
+            if (error.status === 401) {
+                alert('Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại!');
+            } else {
+                $scope.errorMessage = 'Lỗi khi xử lý đơn hàng. Vui lòng thử lại!';
+            }
         });
-    };    
+    };
+     
 }]);
