@@ -36,8 +36,8 @@
                         <a class="nav-link" href="Admin-Order.html">Đơn hàng</a>
                     </li>
                 </ul>
-                <span class="ms-auto text-light">Xin chào, {{ loggedInUser.fullName }}</span>
-                <button class="btn btn-light ms-3" ng-click="logout()">Đăng xuất</button>
+                <span class="ms-auto text-light"></span>
+                <button class="btn btn-danger ms-3"ng-controller="LogoutController" ng-click="logout()">Logout</button>
             </div>
         </div>
     </nav>

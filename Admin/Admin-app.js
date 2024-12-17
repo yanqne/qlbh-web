@@ -20,7 +20,7 @@ app.directive('fileModel', ['$parse', function ($parse) {
 const categoryApiUrl = 'http://localhost:8080/admin/categories/index';
 const productApiUrl = 'http://localhost:8080/admin/product/index';
 const userApiUrl = 'http://localhost:8080/admin/account';
-
+const orderApiUrl = 'http://localhost:8080/order/list';
 app.service('ApiService', ['$http', '$window', function ($http, $window) {
     const token = $window.localStorage.getItem('token');
 
@@ -282,7 +282,7 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
     $scope.successMessage = null;
     $scope.newProduct = {}; // Đối tượng sản phẩm mới
     $scope.editableProduct = null; // Đối tượng chỉnh sửa
-
+    $scope.activeTab = 'show';
 
     // Lấy danh sách sản phẩm
     ApiService.get(productApiUrl)
@@ -295,7 +295,9 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
             console.error('Lỗi khi gọi API sản phẩm:', error);
             $scope.errorMessage = 'Không thể tải danh sách sản phẩm.';
         });
-
+        $scope.setTab = function (tab) {
+            $scope.activeTab = tab;
+        };    
     // Lấy danh sách danh mục
     ApiService.get(categoryApiUrl)
         .then(response => {
@@ -411,12 +413,6 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
             alert(errorMessage);
         });
     };
-    
-    
-    
-    
-    
-    
 
     // Xoá sản phẩm
     $scope.deleteProduct = function (id) {
@@ -461,6 +457,25 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
     $scope.cancelEdit = function () {
         $scope.newProduct = {}; // Xóa dữ liệu trong form
         $scope.editableProduct = null; // Hủy trạng thái chỉnh sửa
+    };
+}]);
+app.controller('OrderController', ['$scope', 'ApiService', function ($scope, ApiService) {
+    $scope.orders = [];
+    $scope.errorMessage = null;
+
+    // Gọi API để lấy danh sách đơn hàng
+    ApiService.get(orderApiUrl)
+        .then(function (response) {
+            $scope.orders = response.data; // Gán danh sách đơn hàng vào scope         
+        })
+        .catch(function (error) {
+            console.error('Lỗi khi gọi API đơn hàng:', error);
+            $scope.errorMessage = 'Đã xảy ra lỗi khi tải danh sách đơn hàng.';
+        });
+    // Chuyển đến trang chi tiết đơn hàng
+    $scope.viewOrderDetails = function (orderId) {
+        // Điều hướng đến trang chi tiết đơn hàng sử dụng window.location
+        window.location.href = `Admin-OrderDetails.html?orderId=${orderId}`;
     };
 }]);
 // Khởi tạo controller mới

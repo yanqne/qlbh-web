@@ -23,19 +23,51 @@ app.controller('AuthController1', function($scope, $http) {
     };
 
     // Xử lý đăng nhập
+// $scope.login = function() {
+//     $http.post('http://localhost:8080/auth/login', $scope.loginData)
+    
+//         .then(function(response) {
+//             // Hiển thị token trên console
+//             console.log(response.data.token); // In token lên console
+
+//             // Hiển thị thông báo đăng nhập thành công
+//             $scope.loginMessage = "Login successful!";
+
+//             // Lưu token vào localStorage
+//             localStorage.setItem('token', response.data.token);
+//             console.log(localStorage.getItem('token'));
+//         })
+//         .catch(function(error) {
+//             // Kiểm tra lỗi và hiển thị thông báo phù hợp
+//             $scope.loginMessage = error.data && error.data.message
+//                 ? "Login failed: " + error.data.message
+//                 : "Login failed: Unknown error";
+
+//             console.error('Login error:', error); // Hiển thị lỗi trên console
+//         });
+// };
 $scope.login = function() {
     $http.post('http://localhost:8080/auth/login', $scope.loginData)
-    
         .then(function(response) {
-            // Hiển thị token trên console
-            console.log(response.data.token); // In token lên console
+            // Lấy token từ server
+            const token = response.data.token;
 
-            // Hiển thị thông báo đăng nhập thành công
-            $scope.loginMessage = "Login successful!";
+            if (token) {
+                // Lưu token vào localStorage
+                localStorage.setItem('token', token);
 
-            // Lưu token vào localStorage
-            localStorage.setItem('token', response.data.token);
-            console.log(localStorage.getItem('token'));
+                // Cập nhật token cho CartService
+                CartService.setToken(token);
+
+                // Hiển thị thông báo đăng nhập thành công
+                $scope.loginMessage = "Login successful!";
+                console.log("Token saved:", token);
+
+                // Chuyển hướng người dùng đến trang chính
+                window.location.href = 'home.html';
+            } else {
+                $scope.loginMessage = "Login failed: Token is missing.";
+            }
         })
         .catch(function(error) {
             // Kiểm tra lỗi và hiển thị thông báo phù hợp
@@ -43,9 +75,10 @@ $scope.login = function() {
                 ? "Login failed: " + error.data.message
                 : "Login failed: Unknown error";
 
-            console.error('Login error:', error); // Hiển thị lỗi trên console
+            console.error('Login error:', error);
         });
 };
+
 
 // Xử lý đăng ký
 $scope.register = function() {
@@ -60,7 +93,6 @@ $scope.register = function() {
                 : "Registration failed: Unknown error";
         });
 };
-
 });
 app.controller('AuthController', function($scope, $http, $window) {
     // State để điều khiển form nào hiển thị
@@ -88,6 +120,7 @@ app.controller('AuthController', function($scope, $http, $window) {
     $scope.login = function() {
         $http.post('http://localhost:8080/auth/login', $scope.loginData)
             .then(function(response) {
+                console.log("hehe");
                 // Lấy token và vai trò từ phản hồi
                 const token = response.data.token;
                 const isAdmin = response.data.admin; // API cần trả về `admin` flag.
