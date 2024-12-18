@@ -71,7 +71,6 @@
                         <td>{{ user.activated }}</td>
                         <td>
                             <button class="btn btn-warning btn-sm" ng-click="editUser(user)">Sửa</button>
-                            <button class="btn btn-danger btn-sm" ng-click="deleteUser(user.id)">Xoá</button>
                         </td>
                     </tr>
                 </tbody>
@@ -79,31 +78,6 @@
 
             <!-- Add Product Form -->
             <!-- Add User Form -->
-            <h3 class="mt-4">{{ editableUser ? 'Cập nhật tài khoản' : 'Thêm tài khoản mới' }}</h3>
-            <form ng-submit="editableUser ? updateUser() : addUser()">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Tên tài khoản</label>
-                    <input type="text" class="form-control" id="username" ng-model="newUser.username" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Mật khẩu</label>
-                    <input type="password" class="form-control" id="password" ng-model="newUser.password" required>
-                </div>
-                <div class="mb-3">
-                    <label for="fullName" class="form-label">Tên đầy đủ</label>
-                    <input type="text" class="form-control" id="fullName" ng-model="newUser.fullName" required>
-                </div>
-                <div class="mb-3">
-                    <label for="phoneNumber" class="form-label">Số điện thoại</label>
-                    <input type="text" class="form-control" id="phoneNumber" ng-model="newUser.phoneNumber" required>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    {{ editableUser ? 'Cập nhật tài khoản' : 'Thêm tài khoản' }}
-                </button>
-                <button type="button" class="btn btn-secondary" ng-if="editableUser"
-                    ng-click="cancelEdit()">Hủy</button>
-            </form>
-
         </section>
     </div>
 

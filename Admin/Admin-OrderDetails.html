@@ -49,49 +49,50 @@
     background-color: #ffffff; cursor: pointer; transition: all 0.3s ease; font-size: 20px; color: #6c757d;">
         <i class="fas fa-arrow-left"></i>
     </button>
-    <div class="container mt-5" ng-controller="OrderDetailController">
-        <h1 class="text-center">Chi Tiết Đơn Hàng</h1>
-
-        <!-- Order Details -->
-        <div class="card mt-4">
-            <div class="card-header">Thông tin đơn hàng</div>
-            <div class="card-body">
-                <p><strong>Mã đơn hàng:</strong> {{ orderDetails[0].order.id }}</p>
-                <p><strong>ID Người dùng:</strong> {{ orderDetails[0].order.userId }}</p>
-                <p><strong>Ngày đặt hàng:</strong> {{ orderDetails[0].order.orderDate | date: 'dd/MM/yyyy HH:mm:ss' }}
-                </p>
-                <p><strong>Tổng tiền:</strong> {{ orderDetails[0].order.totalAmount | currency }}</p>
-            </div>
+    <div class="container my-5" ng-controller="OrderDetailController">
+        <!-- Error Message -->
+        <div ng-if="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
         </div>
 
-        <!-- Products in the Order -->
-        <div class="mt-4">
-            <h2>Sản phẩm trong đơn hàng</h2>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Sản phẩm</th>
-                        <th>Mô tả</th>
-                        <th>Hình ảnh</th>
-                        <th>Số lượng</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="item in orderDetails">
-                        <td>{{ item.product.name }}</td>
-                        <td>{{ item.product.description }}</td>
-                        <td>
-                            <img ng-src="{{ item.product.imageUrl }}" alt="{{ item.product.name }}"
-                                style="width: 80px; height: auto;">
-                        </td>
-                        <td>{{ item.quantity }}</td>
-                        <td>{{ item.product.price | currency }}</td>
-                        <td>{{ item.price | currency }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Order Details -->
+        <div ng-if="orderDetails.length > 0">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h3>Order #{{ orderDetails[0].order.id }}</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Username: {{ orderDetails[0].order.account.username }}</h5>
+                    <h5>Address: {{ orderDetails[0].order.address }}</h5>
+                    <h5>Phone Number: {{ orderDetails[0].order.numberPhone }}</h5>
+                    <h5>Status: {{ orderDetails[0].order.status }}</h5>
+                    <h5>Order Date: {{ orderDetails[0].order.createDate | date }}</h5>
+
+                    <h4 class="mt-4">Order Details:</h4>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Image</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="item in orderDetails">
+                                <td>{{ item.product.name }}</td>
+                                <td><img ng-src="uploadedimages/{{item.product.image}}" style="width: 50px; height: 50px;"></td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.price | currency }}</td>
+                                <td>{{ item.quantity * item.price | currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Total Price: {{ orderDetails[0].order.totalPrice | currency }}</h4>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -186,89 +186,6 @@ app.controller('UserController', ['$scope', 'ApiService', function ($scope, ApiS
             console.error('Lỗi khi gọi API Người dùng:', error);
             $scope.errorMessage = 'Không thể tải danh sách người dùng.';
         });
-
-    // Add a new user
-    $scope.addUser = function () {
-        // Set the default role to 'user'
-        $scope.newUser.role = 'user';
-
-        // Check if all fields are provided before submitting the request
-        if ($scope.newUser.username && $scope.newUser.password && $scope.newUser.fullName && $scope.newUser.phoneNumber) {
-            ApiService.post(userApiUrl, $scope.newUser)
-                .then(function (response) {
-                    if (response.data.code === 1) {
-                        $scope.successMessage = 'Thêm người dùng thành công!';
-                        $scope.users.push(response.data); // Add the new user to the list
-                        // Reset the form fields
-                        $scope.newUser = {};
-                    } else {
-                        $scope.errorMessage = response.data.message || 'Không thể thêm người dùng.';
-                    }
-                })
-                .catch(function (error) {
-                    console.error('Lỗi khi thêm người dùng:', error);
-                    $scope.errorMessage = 'Lỗi khi thực hiện thêm người dùng';
-                });
-        } else {
-            $scope.errorMessage = 'Vui lòng điền đầy đủ thông tin.';
-        }
-    };
-    // Delete user
-    $scope.deleteUser = function (id) {
-        if (confirm('Bạn có chắc chắn muốn xóa?')) {
-            ApiService.delete(`${userApiUrl}/${id}`)
-                .then(response => {
-                    if (response.data) {
-                        $scope.successMessage = 'Xóa thành công!';
-                        // Update the users list after deletion
-                        $scope.users = $scope.users.filter(user => user.id !== id);
-                    } else {
-                        $scope.errorMessage = response.data.message || 'Không thể xóa.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi xóa:', error);
-                    $scope.errorMessage = 'Lỗi khi thực hiện xóa';
-                });
-        }
-    };
-    // Hàm sửa tài khoản (Hiển thị thông tin tài khoản lên form)
-    $scope.editUser = function (user) {
-        $scope.editableUser = angular.copy(user); // Sao chép tài khoản đang sửa
-        $scope.newUser = $scope.editableUser; // Đổ dữ liệu vào form
-    };
-
-    // Hàm cập nhật tài khoản
-    $scope.updateUser = function () {
-        if ($scope.newUser.username && $scope.newUser.password && $scope.newUser.fullName && $scope.newUser.phoneNumber) {
-            ApiService.put(`${userApiUrl}/${$scope.newUser.id}`, $scope.newUser)
-                .then(function (response) {
-                    if (response.data === 1) {
-                        $scope.successMessage = 'Tài khoản đã được cập nhật thành công!';
-                        const index = $scope.users.findIndex(u => u.id === $scope.newUser.id);
-                        if (index !== -1) {
-                            $scope.users[index] = response.data.data; // Cập nhật danh sách tài khoản
-                        }
-                        $scope.newUser = {}; // Reset form
-                        $scope.editableUser = null; // Hủy trạng thái chỉnh sửa
-                    } else {
-                        $scope.errorMessage = response.data.message || 'Không thể cập nhật tài khoản.';
-                    }
-                })
-                .catch(function (error) {
-                    console.error('Lỗi khi cập nhật tài khoản:', error);
-                    $scope.errorMessage = 'Lỗi khi gửi dữ liệu.';
-                });
-        } else {
-            $scope.errorMessage = 'Vui lòng nhập đầy đủ thông tin.';
-        }
-    };
-
-    // Hủy chỉnh sửa tài khoản
-    $scope.cancelEdit = function () {
-        $scope.newUser = {}; // Reset form
-        $scope.editableUser = null; // Hủy trạng thái chỉnh sửa
-    };
 }]);
 // Controller sản phẩm chính
 app.controller('ProductController', ['$scope', 'ApiService', function ($scope, ApiService) {
@@ -462,6 +379,7 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
 app.controller('OrderController', ['$scope', 'ApiService', function ($scope, ApiService) {
     $scope.orders = [];
     $scope.errorMessage = null;
+    $scope.successMessage = null;
 
     // Gọi API để lấy danh sách đơn hàng
     ApiService.get(orderApiUrl)
@@ -472,10 +390,34 @@ app.controller('OrderController', ['$scope', 'ApiService', function ($scope, Api
             console.error('Lỗi khi gọi API đơn hàng:', error);
             $scope.errorMessage = 'Đã xảy ra lỗi khi tải danh sách đơn hàng.';
         });
+
     // Chuyển đến trang chi tiết đơn hàng
     $scope.viewOrderDetails = function (orderId) {
-        // Điều hướng đến trang chi tiết đơn hàng sử dụng window.location
         window.location.href = `Admin-OrderDetails.html?orderId=${orderId}`;
+    };
+
+    // Cập nhật trạng thái đơn hàng
+    $scope.updateOrderStatus = function (orderId, status) {
+        const statusData = {
+            status: status // Trạng thái mới (pending, success, or failed)
+        };
+
+        ApiService.put(`order/update-status/${orderId}`, statusData) // Sử dụng PUT để cập nhật trạng thái
+            .then(function (response) {
+                $scope.successMessage = 'Cập nhật trạng thái đơn hàng thành công!';
+                $scope.errorMessage = null;
+                console.log(response.data);
+                // Cập nhật lại trạng thái của đơn hàng trong danh sách
+                const updatedOrder = $scope.orders.find(order => order.id === orderId);
+                if (updatedOrder) {
+                    updatedOrder.status = status; // Cập nhật trạng thái mới trong danh sách
+                }
+            })
+            .catch(function (error) {
+                $scope.errorMessage = 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.';
+                $scope.successMessage = null;
+                console.error(error);
+            });
     };
 }]);
 // Khởi tạo controller mới
@@ -546,5 +488,70 @@ app.controller('StatisticsController', function ($scope, $http) {
         });
     }
 });
+app.controller('OrderDetailController', ['$scope', '$http', '$location', '$window', function ($scope, $http, $location, $window) {
+    const apiUrl = 'http://localhost:8080/order-detail/list-by-order';
+    $scope.orderDetails = [];
+    $scope.errorMessage = null;
 
+    const token = $window.localStorage.getItem('token');
+    
+    // Lấy orderId từ URL
+    const urlParams = new URLSearchParams($location.absUrl().split('?')[1]);
+    const orderId = urlParams.get('orderId');
+    
+    // Gọi API để lấy chi tiết đơn hàng
+    if (orderId) {
+        $http.get(`${apiUrl}/${orderId}`, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+        .then(function (response) {
+            if (response.data) {
+                $scope.orderDetails = response.data; // Gán chi tiết đơn hàng vào scope
+            } else {
+                $scope.errorMessage = 'Không thể tải chi tiết đơn hàng.';
+            }
+        })
+        .catch(function (error) {
+            console.error('Lỗi khi gọi API chi tiết đơn hàng:', error);
+            $scope.errorMessage = 'Đã xảy ra lỗi khi tải chi tiết đơn hàng.';
+        });
+    } else {
+        $scope.errorMessage = 'Không tìm thấy orderId trong URL.';
+    }
+}]);
+app.service('OrderService', function ($http) {
+    const baseUrl = 'http://localhost:8080/order';
 
+    // Cập nhật trạng thái đơn hàng
+    this.updateOrderStatus = function (orderId, statusData) {
+        return $http.put(`${baseUrl}/update-status/${orderId}`, statusData);
+    };
+});
+app.controller('OrderStatusController', ['$scope', 'OrderService', function ($scope, OrderService) {
+    $scope.orderId = '';  // ID của đơn hàng cần cập nhật
+    $scope.newStatus = ''; // Trạng thái mới cần cập nhật
+    $scope.successMessage = null;
+    $scope.errorMessage = null;
+
+    // Cập nhật trạng thái đơn hàng
+    $scope.updateStatus = function () {
+        const statusData = {
+            status: $scope.newStatus // Trạng thái mới
+        };
+
+        // Gửi yêu cầu cập nhật trạng thái đơn hàng
+        OrderService.updateOrderStatus($scope.orderId, statusData)
+            .then(function (response) {
+                $scope.successMessage = 'Cập nhật trạng thái đơn hàng thành công!';
+                $scope.errorMessage = null;
+                console.log(response.data);
+            })
+            .catch(function (error) {
+                $scope.errorMessage = 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.';
+                $scope.successMessage = null;
+                console.error(error);
+            });
+    };
+}]);

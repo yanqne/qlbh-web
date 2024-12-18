@@ -39,13 +39,21 @@
                     </li>
                 </ul>
                 <span class="ms-auto text-light"></span>
-                <button class="btn btn-danger ms-3"ng-controller="LogoutController" ng-click="logout()">Logout</button>
+                <button class="btn btn-danger ms-3" ng-controller="LogoutController" ng-click="logout()">Logout</button>
             </div>
         </div>
-</nav>
+    </nav>
 
     <div class="container mt-5" ng-controller="OrderController">
         <h1 class="text-center">Quản lý Đơn Hàng</h1>
+
+        <!-- Success/Error Messages -->
+        <div ng-if="successMessage" class="alert alert-success">
+            {{ successMessage }}
+        </div>
+        <div ng-if="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+        </div>
 
         <!-- Order List -->
         <section id="orders" class="mt-5">
@@ -65,11 +73,16 @@
                 <tbody>
                     <tr ng-repeat="order in orders">
                         <td>{{ order.id }}</td>
-                        <td>{{ order.account }}</td>
+                        <td>{{ order.account.username }}</td>
                         <td>{{ order.createDate | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
                         <td>{{ order.address }}</td>
                         <td>{{ order.totalPrice }}</td>
-                        <td>{{ order.status }}</td>
+                        <td>
+                            <!-- Dropdown for status -->
+                            <select ng-model="order.status" ng-options="status for status in ['pending', 'success', 'failed']" 
+                                    ng-change="updateOrderStatus(order.id, order.status)" class="form-select">
+                            </select>
+                        </td>
                         <td>
                             <button class="btn btn-primary btn-sm" ng-click="viewOrderDetails(order.id)">Xem chi tiết</button>
                         </td>
