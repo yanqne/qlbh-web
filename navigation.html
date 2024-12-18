@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="myApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="app.js"></script>
 </head>
 <body>
-    <nav id="navigation">
+    <nav id="navigation" ng-controller="MainController">
         <!-- container -->
         <div class="container">
             <!-- responsive-nav -->
@@ -15,7 +16,8 @@
                 <ul class="main-nav nav navbar-nav">
                     <li class=""><a href="store.html">Home</a></li>
                     <li><a href="#">Categories</a></li>
-                    <li><a href="checkout.html">Checkout</a></li>
+                    <li><a href="cart.html">Checkout</a></li>
+                    <li><a  ng-if="isAdmin" ng-click="goToAdmin()">Admin</a></li>
                 </ul>
                 <!-- /NAV -->
             </div>

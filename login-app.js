@@ -5,7 +5,10 @@ app.controller('AuthController', function($scope, $http, $window) {
     $scope.activeForm = 'login'; // Mặc định là form Login
     $scope.isLoggedIn = localStorage.getItem('token') ? true : false;
     // Dữ liệu cho form
-    $scope.loginData = {};
+    $scope.username = null;
+    $scope.loginData = {
+        
+    };
     $scope.registerData = {
         admin: false, // Mặc định admin=false
         activated: true // Mặc định activated=true
@@ -26,14 +29,14 @@ app.controller('AuthController', function($scope, $http, $window) {
     $scope.login = function() {
         $http.post('http://localhost:8080/auth/login', $scope.loginData)
             .then(function(response) {
-                
                 // Lấy token và vai trò từ phản hồi
                 const token = response.data.token;
                 const isAdmin = response.data.admin; // API cần trả về `admin` flag.
-
+                const username = $scope.loginData.username;
                 // Lưu token vào localStorage
                 localStorage.setItem('token', token);
                 localStorage.setItem('isAdmin', isAdmin)
+                localStorage.setItem('username', username);
                 // Điều hướng dựa vào vai trò
                 alert("Đăng nhập thành công")
                 if (isAdmin) {

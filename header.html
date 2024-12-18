@@ -43,32 +43,8 @@
                             <div class="dropdown" ng-controller="CartController">
                                 <a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
                                     <i class="fa fa-shopping-cart"></i>
-                                    <span>Your Cart</span>
-                                    <div class="qty">3</div>
+                                    <a href="cart.html">your Cart</a>
                                 </a>
-                                <div class="cart-dropdown">
-                                    <div class="cart-list" ng-if="cart.items.length > 0">
-                                        <div class="product-widget" ng-repeat="item in cart.items">
-                                            <div class="product-img">
-                                                <img src="./img/product01.png" alt="">
-                                            </div>
-                                            <div class="product-body">
-                                                <h3 class="product-name"><a href="#">{{ item.name }}</a></h3>
-                                                <h4 class="product-price"><span class="qty">QTY: {{ item.quantity }}</span></h4>
-                                            </div>
-                                            <button class="delete" ng-click="removeFromCart(item.id)"><i
-                                                    class="fa fa-close"></i></button>
-                                        </div>
-                                    </div>
-                                    <div class="cart-summary">
-                                        <small>x Item(s) selected</small>
-                                        <h5>${{ cart.totalAmount.toFixed(2) }}</h5>
-                                    </div>
-                                    <div class="cart-btns">
-                                        <a href="cart.html">View Cart</a>
-                                        <a href="#">Checkout <i class="fa fa-arrow-circle-right"></i></a>
-                                    </div>
-                                </div>
                             </div>
                             <div ng-controller="HeaderController">
                                 
@@ -76,15 +52,11 @@
                                         <i class="fa fa-user-o"></i>
                                         <span>Login/Resgiter</span>
                                     </a>
-                                
-                                
                                     <a href="#" ng-click="logout()" ng-show="isLoggedIn">
                                         <i class="fa fa-user-o"></i>
                                         <span>Logout</span>
-                                    </a>
-                                
+                                    </a>                                  
                             </div>
-
                             <!-- Menu Toogle -->
                             <div class="menu-toggle">
                                 <a href="#">

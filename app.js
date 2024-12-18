@@ -81,7 +81,7 @@ app.controller('FilterProductController', ['$scope', 'ApiService', function ($sc
         } else {
             // Lọc sản phẩm theo danh mục
             $scope.filteredProducts = $scope.products.filter(function (product) {
-                return product.category && product.category.id === categoryId;
+                return product.category && product.categoryId === categoryId;
             });
         }
     };
@@ -170,27 +170,40 @@ app.controller('LogoutController', function($scope, $window) {
         $window.location.href = '/login-register.html';
     };
 });
-app.controller('HeaderController', ['$scope','CartService', function ($scope,CartService) {
+app.controller('HeaderController', ['$scope', 'CartService', '$window', function ($scope, CartService, $window) {
     // Kiểm tra trạng thái đăng nhập
     $scope.isLoggedIn = false; // Giá trị mặc định là chưa đăng nhập
+    $scope.isAdmin = false; // Giá trị mặc định là không phải admin
 
-    // Giả lập trạng thái đăng nhập (có thể thay bằng kiểm tra token từ localStorage)
+    // Kiểm tra nếu có token trong localStorage
     var token = localStorage.getItem('token');
     if (token) {
         $scope.isLoggedIn = true;
+        
+        // Kiểm tra nếu người dùng là admin
+        const isAdmin = localStorage.getItem('isAdmin');
+        $scope.isAdmin = isAdmin === 'true'; // Nếu isAdmin là 'true', người dùng là admin
     }
 
     // Hàm logout
-    $scope.logout = function() {
+    $scope.logout = function () {
         // Lưu giỏ hàng hiện tại vào key cố định
         const currentCart = CartService.getCart().items;
         localStorage.setItem('guest_cart', JSON.stringify(currentCart));
-    
+
         // Xóa token khỏi localStorage
         localStorage.removeItem('token');
+        localStorage.removeItem('isAdmin'); // Xóa thông tin admin khi logout
         $scope.isLoggedIn = false; // Người dùng đã đăng xuất
+        $scope.isAdmin = false; // Không còn là admin
+    };
+
+    // Hàm chuyển hướng đến trang quản lý admin
+    $scope.goToAdmin = function () {
+        $window.location.href = '/Admin/Admin-Product.html'; // Đường dẫn tới trang quản lý admin
     };
 }]);
+
 app.service('CartService', function () {
     let cart = []; // Biến tạm chứa giỏ hàng
     let token = localStorage.getItem('token'); // Lấy token của người dùng
@@ -456,4 +469,13 @@ app.controller('OrderController', function ($scope, OrderService, CartService, A
     $scope.loadCart();
     $scope.loadUser();  // Lấy username từ AuthService và tự động điền vào orderData
 });
+app.controller('MainController', function($scope, $window) {
+    // Kiểm tra nếu người dùng là admin
+    const isAdmin = localStorage.getItem('isAdmin');
+    $scope.isAdmin = isAdmin === 'true'; // Kiểm tra nếu isAdmin là true thì hiển thị nút
 
+    // Hàm chuyển hướng đến trang quản lý
+    $scope.goToAdmin = function() {
+        $window.location.href = '/Admin/Admin-Product.html'; // Đường dẫn tới trang admin
+    };
+});

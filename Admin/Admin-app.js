@@ -245,7 +245,13 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
         formData.append("categoryId", $scope.newProduct.categoryId);
         formData.append("price", $scope.newProduct.price);
         formData.append("quality", $scope.newProduct.quality);
-
+        if ($scope.newProduct.name) {
+            formData.append("name", $scope.newProduct.name);
+        } else {
+            console.error("Thiếu dữ liệu.");
+            alert("Tên không được để trống.");
+            return;
+        }
         // Kiểm tra xem có tệp không và thêm vào FormData
         if ($scope.newProduct.images) {
             formData.append("images", $scope.newProduct.images);
@@ -402,7 +408,7 @@ app.controller('OrderController', ['$scope', 'ApiService', function ($scope, Api
             status: status // Trạng thái mới (pending, success, or failed)
         };
 
-        ApiService.put(`order/update-status/${orderId}`, statusData) // Sử dụng PUT để cập nhật trạng thái
+        ApiService.put(`http://localhost:8080/order/update-status/${orderId}`, statusData) // Sử dụng PUT để cập nhật trạng thái
             .then(function (response) {
                 $scope.successMessage = 'Cập nhật trạng thái đơn hàng thành công!';
                 $scope.errorMessage = null;
@@ -431,10 +437,11 @@ app.controller('LogoutController', function ($scope, $window) {
         $window.location.href = '/login-register.html';
     };
 });
-app.controller('StatisticsController', function ($scope, $http) {
+app.controller('StatisticsController', function ($scope, $http, $timeout) {
     $scope.stats = {};  // Biến để chứa dữ liệu thống kê
     $scope.errorMessage = ''; // Biến để chứa thông báo lỗi
-
+    $scope.year = new Date().getFullYear();
+    $scope.month = new Date().getMonth() + 1;
     // Hàm tải thống kê từ API
     $scope.loadStatistics = function () {
         $http.get('http://localhost:8080/admin/statistics')
@@ -450,11 +457,7 @@ app.controller('StatisticsController', function ($scope, $http) {
                 console.error('Lỗi khi lấy dữ liệu thống kê:', error);
             });
     };
-
-    // Tải thống kê ngay khi controller khởi tạo
     $scope.loadStatistics();
-
-    // Hàm vẽ biểu đồ
     function drawChart(data) {
         var ctx = document.getElementById('statisticsChart').getContext('2d');
 
@@ -487,6 +490,64 @@ app.controller('StatisticsController', function ($scope, $http) {
             }
         });
     }
+    $scope.loadOrderStatusCount = function () {
+        $http.get('http://localhost:8080/admin/statistics/order-status-count')
+            .then(function (response) {
+                const data = response.data.map(item => {
+                    return {
+                        status: item.status || 'Unknown', // Thay null bằng 'Unknown'
+                        count: item.count
+                    };
+                });
+
+                // Đợi DOM sẵn sàng trước khi vẽ
+                $timeout(() => {
+                    drawPieChart(data);
+                }, 0);
+            })
+            .catch(function (error) {
+                $scope.errorMessage = 'Không thể tải thống kê tình trạng đơn hàng. Vui lòng thử lại!';
+                console.error('Lỗi khi lấy dữ liệu tình trạng đơn hàng:', error);
+            });
+    };
+    $scope.loadOrderStatusCount();
+    function drawPieChart(data) {
+        const labels = data.map(item => item.status);
+        const values = data.map(item => item.count);
+    
+        const canvas = document.getElementById('orderStatusCountChart');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+    
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Thống kê tình trạng đơn hàng'
+                    }
+                }
+            }
+        });
+    }
+    
 });
 app.controller('OrderDetailController', ['$scope', '$http', '$location', '$window', function ($scope, $http, $location, $window) {
     const apiUrl = 'http://localhost:8080/order-detail/list-by-order';
@@ -522,11 +583,10 @@ app.controller('OrderDetailController', ['$scope', '$http', '$location', '$windo
     }
 }]);
 app.service('OrderService', function ($http) {
-    const baseUrl = 'http://localhost:8080/order';
 
     // Cập nhật trạng thái đơn hàng
     this.updateOrderStatus = function (orderId, statusData) {
-        return $http.put(`${baseUrl}/update-status/${orderId}`, statusData);
+        return $http.put(`http://localhost:8080/order/update-status/${orderId}`, statusData);
     };
 });
 app.controller('OrderStatusController', ['$scope', 'OrderService', function ($scope, OrderService) {
@@ -553,5 +613,20 @@ app.controller('OrderStatusController', ['$scope', 'OrderService', function ($sc
                 $scope.successMessage = null;
                 console.error(error);
             });
+    };
+}]);
+app.factory('StatisticsService', ['$http', function($http) {
+    const baseUrl = 'http://localhost:8080'; // Thay bằng URL backend của bạn
+
+    return {
+        getOrderCountByMonth: function(year) {
+            return $http.get(`${baseUrl}/order-count-by-month`, { params: { year: year } });
+        },
+        getOrderStatusCount: function() {
+            return $http.get(`${baseUrl}/order-status-count`);
+        },
+        getTopBuyersByMonth: function(year, month) {
+            return $http.get(`${baseUrl}/top-buyers`, { params: { year: year, month: month } });
+        }
     };
 }]);
