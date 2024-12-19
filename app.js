@@ -41,15 +41,21 @@ app.controller('FilterProductController', ['$scope', 'ApiService', function ($sc
     $scope.categories = []; // Danh sách danh mục
     $scope.products = []; // Danh sách tất cả sản phẩm
     $scope.filteredProducts = []; // Danh sách sản phẩm đã lọc
+    $scope.paginatedProducts = []; // Danh sách sản phẩm cho trang hiện tại
     $scope.selectedCategory = null; // Danh mục được chọn
     $scope.searchKeywords = ''; // Từ khóa tìm kiếm
     $scope.product = null;
+
+    // Phân trang
+    $scope.currentPage = 1; // Trang hiện tại
+    $scope.itemsPerPage = 10; // Số sản phẩm mỗi trang
+    $scope.totalPages = 0; // Tổng số trang
 
     // Lấy danh sách danh mục từ API
     ApiService.get(categoryUrl)
         .then(function (response) {
             if (response.data) {
-                $scope.categories = response.data; // Gán danh sách danh mục vào scope
+                $scope.categories = response.data;
             } else {
                 console.error('Dữ liệu danh mục không hợp lệ:', response.data);
             }
@@ -62,8 +68,8 @@ app.controller('FilterProductController', ['$scope', 'ApiService', function ($sc
     ApiService.get(productUrl)
         .then(function (response) {
             if (response.data) {
-                $scope.products = response.data; // Gán danh sách sản phẩm vào scope
-                $scope.filteredProducts = $scope.products; // Mặc định hiển thị tất cả sản phẩm
+                $scope.products = response.data;
+                $scope.filterProducts(); // Áp dụng bộ lọc ban đầu
             } else {
                 console.error('Dữ liệu sản phẩm không hợp lệ:', response.data);
             }
@@ -81,19 +87,38 @@ app.controller('FilterProductController', ['$scope', 'ApiService', function ($sc
                 !$scope.searchKeywords || product.name.toLowerCase().includes($scope.searchKeywords.toLowerCase());
             return matchesCategory && matchesKeywords;
         });
+        $scope.totalPages = Math.ceil($scope.filteredProducts.length / $scope.itemsPerPage); // Tính tổng số trang
+        $scope.currentPage = 1; // Reset về trang đầu tiên
+        $scope.updatePaginatedProducts();
+    };
+
+    // Cập nhật danh sách sản phẩm cho trang hiện tại
+    $scope.updatePaginatedProducts = function () {
+        const startIndex = ($scope.currentPage - 1) * $scope.itemsPerPage;
+        const endIndex = startIndex + $scope.itemsPerPage;
+        $scope.paginatedProducts = $scope.filteredProducts.slice(startIndex, endIndex);
+    };
+
+    // Chuyển sang trang khác
+    $scope.goToPage = function (page) {
+        if (page >= 1 && page <= $scope.totalPages) {
+            $scope.currentPage = page;
+            $scope.updatePaginatedProducts();
+        }
     };
 
     // Hàm chọn danh mục
     $scope.selectCategory = function (categoryId) {
         $scope.selectedCategory = categoryId || null;
-        $scope.filterProducts(); // Áp dụng bộ lọc khi chọn danh mục
+        $scope.filterProducts();
     };
 
     // Hàm tìm kiếm
     $scope.search = function () {
-        $scope.filterProducts(); // Áp dụng bộ lọc khi nhập từ khóa
+        $scope.filterProducts();
     };
 }]);
+
 
 app.controller('ProductDetailController', ['$scope', '$location', 'ApiService','CartService', function ($scope, $location, ApiService,CartService) {
 
@@ -411,16 +436,32 @@ app.controller('OrderController', function ($scope, OrderService, CartService, A
     $scope.cart = []; // Giỏ hàng của người dùng
     $scope.totalAmount = 0;
 
-    // Lấy giỏ hàng từ CartService (giả sử đã có CartService)
+    // Lấy giỏ hàng từ CartService
     $scope.loadCart = function () {
         const cartData = CartService.getCart();
         $scope.cart = cartData.items;
-        $scope.totalAmount = cartData.totalAmount;
+        $scope.calculateTotal(); // Tính tổng tiền
     };
 
     // Lấy thông tin người dùng từ AuthService và tự động điền vào trường username
     $scope.loadUser = function () {
         $scope.orderData.username = AuthService.getUsername();
+    };
+
+    // Hàm tính tổng tiền
+    $scope.calculateTotal = function () {
+        $scope.totalAmount = $scope.cart.reduce(function (total, item) {
+            return total + item.quantity * item.price;
+        }, 0);
+    };
+
+    // Hàm cập nhật số lượng sản phẩm
+    $scope.updateQuantity = function (item) {
+        if (item.quantity < 1) {
+            item.quantity = 1; // Đảm bảo số lượng không nhỏ hơn 1
+        }
+        CartService.updateCart(item); // Cập nhật lại giỏ hàng trong CartService
+        $scope.calculateTotal(); // Tính lại tổng tiền
     };
 
     // Tạo đơn hàng
@@ -440,7 +481,7 @@ app.controller('OrderController', function ($scope, OrderService, CartService, A
                 // Xóa giỏ hàng sau khi đặt hàng thành công
                 CartService.clearCart();
                 $scope.loadCart();
-                window.location.href='store.html'
+                window.location.href = 'store.html';
             })
             .catch(function (error) {
                 alert('Error creating order. Please try again.');
@@ -450,8 +491,9 @@ app.controller('OrderController', function ($scope, OrderService, CartService, A
 
     // Khởi tạo giỏ hàng và thông tin người dùng
     $scope.loadCart();
-    $scope.loadUser();  // Lấy username từ AuthService và tự động điền vào orderData
+    $scope.loadUser(); // Lấy username từ AuthService và tự động điền vào orderData
 });
+
 app.controller('MainController', function($scope, $window) {
     // Kiểm tra nếu người dùng là admin
     const isAdmin = localStorage.getItem('isAdmin');
