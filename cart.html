@@ -25,25 +25,36 @@
             <h2 class="mb-0">Your Cart</h2>
         </div>
         <div class="card-body">
-            <div ng-repeat="item in cart" class="row align-items-center border-bottom py-2">
-                <div class="col-md-6">
-                    <h5>{{ item.name }}</h5>
+            <div ng-repeat="item in cart" class="d-flex align-items-center py-2 border-bottom">
+                <div class="flex-grow-1 d-flex align-items-center">
+                    <h5 class="mb-0 me-3">{{ item.name }}</h5>
                 </div>
-                <div class="col-md-3 text-center">
-                    <!-- Input để chỉnh sửa số lượng -->
-                    <input type="number" class="form-control text-center" 
+                <div class="d-flex align-items-center me-3">
+                    <input type="number" class="form-control form-control-sm text-center" 
                            ng-model="item.quantity" 
                            min="1" 
                            ng-change="updateQuantity(item)"
                            required>
                 </div>
-                <div class="col-md-3 text-end">
+                <div class="text-end me-3">
                     <span>{{ item.quantity * item.price | currency }}</span>
                 </div>
-                
+                <div class="text-end">
+                    <button class="btn btn-danger btn-sm d-flex align-items-center" 
+                            ng-click="removeFromCart(item.id)">
+                        Xoá <i class="fas fa-trash ms-1"></i>
+                    </button>
+                </div>
             </div>
+            
             <div class="mt-3 text-end">
                 <h4>Total: <strong>{{ totalAmount | currency }}</strong></h4>
+            </div>
+            <div class="mt-3 text-end">
+                <!-- Nút để xóa toàn bộ giỏ hàng -->
+                <button class="btn btn-warning" ng-click="clearCart()">
+                    <i class="fas fa-trash-alt"></i> Clear Cart
+                </button>
             </div>
         </div>
     </div>
