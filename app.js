@@ -454,7 +454,7 @@ app.service('OrderService', function ($http) {
         });
     };
 });
-app.controller('OrderController', function ($scope, OrderService, CartService, AuthService) {
+app.controller('OrderController', function ($scope, OrderService, CartService, AuthService, ApiService) {
     $scope.orderData = {
         username: '', // Tên tài khoản người dùng
         address: '',
@@ -489,8 +489,22 @@ app.controller('OrderController', function ($scope, OrderService, CartService, A
         if (item.quantity < 1) {
             item.quantity = 1; // Đảm bảo số lượng không nhỏ hơn 1
         }
-        CartService.updateCart(item); // Cập nhật lại giỏ hàng trong CartService
-        $scope.calculateTotal(); // Tính lại tổng tiền
+        ApiService.get(`http://localhost:8080/admin/product/edit/${item.id}`)
+            .then(function (response) {
+                if (response.success = 200) {
+                    if(response.data.quality<item.quantity){
+                        alert("Sản phẩm không đủ số lượng")
+                        item.quantity = response.data.quality
+                    }else{
+                        CartService.updateCart(item); // Cập nhật lại giỏ hàng trong CartService
+                        $scope.calculateTotal(); // Tính lại tổng tiền
+                    }
+                }
+            })
+            .catch(function (error) {
+                console.error('Lỗi khi tải chi tiết sản phẩm:', error);
+                alert("Error")
+            });
     };
 
     // Tạo đơn hàng
