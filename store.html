@@ -143,14 +143,19 @@
 									<h3 class="product-name"><a href="#">product name goes here</a></h3>
 									<h4 class="product-price">$980.00 <del class="product-old-price">$990.00</del></h4>
 								</div>
-							</div>
-
-							
+							</div>						
 						</div>
 						<!-- /aside Widget -->
 					</div>
 					<!-- /ASIDE -->
-
+					<div class="col-md-8">
+                        <div class="header-search">
+                            <form>
+                                <input class="input" ng-model="searchKeywords" placeholder="Search products..." ng-change="search()">
+                                <button class="search-btn">Search</button>
+                            </form>
+                        </div>
+                    </div>
 					<!-- STORE -->
 					<div id="store" class="col-md-9">
 						<!-- store top filter -->

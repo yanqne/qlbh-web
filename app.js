@@ -36,14 +36,15 @@ app.service('AuthService', function () {
         return localStorage.getItem('username'); // Hoặc lấy từ cookie, session, v.v.
     };
 });
-
 app.controller('FilterProductController', ['$scope', 'ApiService', function ($scope, ApiService) {
 
     $scope.categories = []; // Danh sách danh mục
     $scope.products = []; // Danh sách tất cả sản phẩm
     $scope.filteredProducts = []; // Danh sách sản phẩm đã lọc
     $scope.selectedCategory = null; // Danh mục được chọn
+    $scope.searchKeywords = ''; // Từ khóa tìm kiếm
     $scope.product = null;
+
     // Lấy danh sách danh mục từ API
     ApiService.get(categoryUrl)
         .then(function (response) {
@@ -71,44 +72,26 @@ app.controller('FilterProductController', ['$scope', 'ApiService', function ($sc
             console.error('Lỗi khi tải sản phẩm:', error);
         });
 
-    // Hàm lọc sản phẩm theo danh mục
-    $scope.selectCategory = function (categoryId) {
-        $scope.selectedCategory = categoryId;
-
-        if (categoryId === null) {
-            // Hiển thị tất cả sản phẩm
-            $scope.filteredProducts = $scope.products;
-        } else {
-            // Lọc sản phẩm theo danh mục
-            $scope.filteredProducts = $scope.products.filter(function (product) {
-                return product.category && product.categoryId === categoryId;
-            });
-        }
+    // Hàm lọc sản phẩm theo danh mục và từ khóa
+    $scope.filterProducts = function () {
+        $scope.filteredProducts = $scope.products.filter(function (product) {
+            const matchesCategory =
+                !$scope.selectedCategory || product.categoryId === $scope.selectedCategory;
+            const matchesKeywords =
+                !$scope.searchKeywords || product.name.toLowerCase().includes($scope.searchKeywords.toLowerCase());
+            return matchesCategory && matchesKeywords;
+        });
     };
-    // Thêm vào giỏ hàng
-    $scope.addToCart = function () {
-        try {
-            if ($scope.product) {
-                // Kiểm tra nếu người dùng đã đăng nhập qua token
-                const token = localStorage.getItem('token'); // Kiểm tra token trong localStorage
-                if (!token) {
-                    alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
-                    return;
-                }
-    
-                // Nếu đã có token, tiến hành thêm sản phẩm vào giỏ hàng
-                CartService.addToCart({
-                    id: $scope.product.id,
-                    name: $scope.product.name,
-                    price: $scope.product.price
-                });
-    
-                $scope.successMessage = `Sản phẩm "${$scope.product.name}" đã được thêm vào giỏ hàng!`;
-            }
-        } catch (error) {
-            console.error('Lỗi khi thêm sản phẩm vào giỏ hàng:', error);
-            $scope.errorMessage = 'Lỗi khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại!';
-        }
+
+    // Hàm chọn danh mục
+    $scope.selectCategory = function (categoryId) {
+        $scope.selectedCategory = categoryId || null;
+        $scope.filterProducts(); // Áp dụng bộ lọc khi chọn danh mục
+    };
+
+    // Hàm tìm kiếm
+    $scope.search = function () {
+        $scope.filterProducts(); // Áp dụng bộ lọc khi nhập từ khóa
     };
 }]);
 
