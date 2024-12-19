@@ -231,7 +231,18 @@ app.service('CartService', function () {
             cart = []; // Nếu không có token, khởi tạo giỏ hàng trống
         }
     }
-
+    this.updateCart = function (item) {
+        // Tìm sản phẩm trong giỏ hàng
+        const existingProduct = cart.find(cartItem => cartItem.id === item.id);
+    
+        if (existingProduct) {
+            // Cập nhật số lượng của sản phẩm nếu tồn tại
+            existingProduct.quantity = item.quantity;
+        }
+    
+        // Lưu lại giỏ hàng sau khi cập nhật
+        saveCart();
+    };
     // Lưu giỏ hàng vào localStorage
     function saveCart() {
         const cartKey = getCartKey();
