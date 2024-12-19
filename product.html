@@ -48,7 +48,7 @@
 		<!-- /BREADCRUMB -->
 
 		<!-- SECTION -->
-		<div class="section">
+		<div class="section" ng-controller="ProductDetailController">
 			<!-- container -->
 			<div class="container">
 				<!-- row -->
@@ -57,19 +57,7 @@
 					<div class="col-md-5 col-md-push-2">
 						<div id="product-main-img">
 							<div class="product-preview">
-								<img src="./img/product01.png" alt="">
-							</div>
-
-							<div class="product-preview">
-								<img src="./img/product03.png" alt="">
-							</div>
-
-							<div class="product-preview">
-								<img src="./img/product06.png" alt="">
-							</div>
-
-							<div class="product-preview">
-								<img src="./img/product08.png" alt="">
+								<img ng-src="./img/{{product.image}}" alt="">
 							</div>
 						</div>
 					</div>
@@ -77,29 +65,12 @@
 
 					<!-- Product thumb imgs -->
 					<div class="col-md-2  col-md-pull-5">
-						<div id="product-imgs">
-							<div class="product-preview">
-								<img src="./img/product01.png" alt="">
-							</div>
-
-							<div class="product-preview">
-								<img src="./img/product03.png" alt="">
-							</div>
-
-							<div class="product-preview">
-								<img src="./img/product06.png" alt="">
-							</div>
-
-							<div class="product-preview">
-								<img src="./img/product08.png" alt="">
-							</div>
-						</div>
 					</div>
 					<!-- /Product thumb imgs -->
 
 					<!-- Product details -->
 					<div class="col-md-5">
-						<div class="product-details" ng-controller="ProductDetailController">
+						<div class="product-details">
 							<h2 class="product-name">{{product.name}}</h2>
 							<h2>{{product.name}}</h2>
 							<div>
