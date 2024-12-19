@@ -34,11 +34,11 @@ app.service('ApiService', ['$http', '$window', function ($http, $window) {
         // Kiểm tra nếu data là FormData thì không thiết lập Content-Type
         if (data instanceof FormData) {
             // Nếu là FormData, không cần chỉ định Content-Type vì AngularJS sẽ tự động thiết lập là multipart/form-data
-            config.headers = config.headers || {};
+            config.headers = defaultHeaders || {};
             config.headers['Content-Type'] = undefined;  // Để AngularJS tự thiết lập Content-Type là multipart/form-data
         } else {
             // Nếu không phải FormData, thiết lập Content-Type là application/json
-            config.headers = config.headers || {};
+            config.headers = defaultHeaders || {};
             config.headers['Content-Type'] = 'application/json';
         }
 
@@ -57,11 +57,11 @@ app.service('ApiService', ['$http', '$window', function ($http, $window) {
     this.put = function (url, data, config = {}) {
         if (data instanceof FormData) {
             // Nếu là FormData, không cần chỉ định Content-Type vì AngularJS sẽ tự động thiết lập là multipart/form-data
-            config.headers = config.headers || {};
+            config.headers = defaultHeaders || {};
             config.headers['Content-Type'] = undefined;  // Để AngularJS tự thiết lập Content-Type là multipart/form-data
         } else {
             // Nếu không phải FormData, thiết lập Content-Type là application/json
-            config.headers = config.headers || {};
+            config.headers = defaultHeaders || {};
             config.headers['Content-Type'] = 'application/json';
         }
 
@@ -443,8 +443,13 @@ app.controller('StatisticsController', function ($scope, $http, $timeout) {
     $scope.year = new Date().getFullYear();
     $scope.month = new Date().getMonth() + 1;
     // Hàm tải thống kê từ API
+    const token = localStorage.getItem('token');
     $scope.loadStatistics = function () {
-        $http.get('http://localhost:8080/admin/statistics')
+        $http.get('http://localhost:8080/admin/statistics', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
             .then(function (response) {
                 // Lưu dữ liệu trả về từ API vào scope
                 $scope.stats = response.data;
@@ -491,7 +496,12 @@ app.controller('StatisticsController', function ($scope, $http, $timeout) {
         });
     }
     $scope.loadOrderStatusCount = function () {
-        $http.get('http://localhost:8080/admin/statistics/order-status-count')
+        const token = localStorage.getItem('token');
+        $http.get('http://localhost:8080/admin/statistics/order-status-count', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
             .then(function (response) {
                 const data = response.data.map(item => {
                     return {
@@ -583,11 +593,13 @@ app.controller('OrderDetailController', ['$scope', '$http', '$location', '$windo
     }
 }]);
 app.service('OrderService', function ($http) {
-
+    const token = localStorage.getItem('token');
     // Cập nhật trạng thái đơn hàng
-    this.updateOrderStatus = function (orderId, statusData) {
-        return $http.put(`http://localhost:8080/order/update-status/${orderId}`, statusData);
-    };
+    return $http.put(`http://localhost:8080/order/update-status/${orderId}`, statusData, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
 });
 app.controller('OrderStatusController', ['$scope', 'OrderService', function ($scope, OrderService) {
     $scope.orderId = '';  // ID của đơn hàng cần cập nhật

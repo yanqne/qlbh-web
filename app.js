@@ -405,24 +405,42 @@ app.controller('CartController', ['$scope', '$http', 'CartService', '$window', f
 app.service('OrderService', function ($http) {
     const baseUrl = 'http://localhost:8080/order';
 
+    const token = localStorage.getItem('token');
+
     // Gửi yêu cầu tạo đơn hàng
     this.createOrder = function (orderData) {
-        return $http.post(`${baseUrl}/create`, orderData);
+        return $http.post(`${baseUrl}/create`, orderData, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     };
 
     // Lấy danh sách đơn hàng
     this.getOrders = function () {
-        return $http.get(`${baseUrl}/list`);
+        return $http.get(`${baseUrl}/list`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     };
 
     // Lấy chi tiết đơn hàng
     this.getOrderDetails = function (orderId) {
-        return $http.get(`${baseUrl}/detail/${orderId}`);
+        return $http.get(`${baseUrl}/detail/${orderId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     };
 
     // Cập nhật trạng thái đơn hàng
     this.updateOrderStatus = function (orderId, statusData) {
-        return $http.put(`${baseUrl}/update-status/${orderId}`, statusData);
+        return $http.put(`${baseUrl}/update-status/${orderId}`, statusData, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     };
 });
 app.controller('OrderController', function ($scope, OrderService, CartService, AuthService) {
