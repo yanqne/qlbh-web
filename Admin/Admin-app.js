@@ -18,6 +18,7 @@ app.directive('fileModel', ['$parse', function ($parse) {
 
 
 const categoryApiUrl = 'http://localhost:8080/admin/categories/index';
+const categoryApiPutUrl = 'http://localhost:8080/admin/categories/update';
 const productApiUrl = 'http://localhost:8080/admin/product/index';
 const userApiUrl = 'http://localhost:8080/admin/account';
 const orderApiUrl = 'http://localhost:8080/order/list';
@@ -119,9 +120,16 @@ app.controller('CategoryController', ['$scope', 'ApiService', function ($scope, 
         if (confirm('Bạn có chắc chắn muốn xóa?')) {
             ApiService.delete(`http://localhost:8080/admin/categories/delete/${id}`)
                 .then(response => {
-                    if (response.data.code === 1) {
+                    if (response.status === 200) {
                         $scope.successMessage = 'Xóa thành công!';
-                        $scope.categories = $scope.categories.filter(category => category.id !== id);
+                        ApiService.get(categoryApiUrl)
+                        .then(function (response) {
+                            $scope.categories = response.data; // Gắn danh sách danh mục
+                        })
+                        .catch(function (error) {
+                            console.error('Lỗi khi gọi API danh mục:', error);
+                            $scope.errorMessage = 'Không thể tải danh sách danh mục.';
+                        });
                     } else {
                         $scope.errorMessage = response.data.message || 'Không thể xóa.';
                     }
@@ -140,14 +148,19 @@ app.controller('CategoryController', ['$scope', 'ApiService', function ($scope, 
     // Hàm cập nhật danh mục
     $scope.updateCategory = function () {
         if ($scope.newCategory.name) {
-            ApiService.put(`${categoryApiUrl}/${$scope.newCategory.id}`, $scope.newCategory)
+            ApiService.put(`${categoryApiPutUrl}`, $scope.newCategory)
                 .then(function (response) {
-                    if (response.data.code === 1) {
+                    if (response.status === 200) {
                         $scope.successMessage = 'Danh mục đã được cập nhật thành công!';
-                        const index = $scope.categories.findIndex(c => c.id === $scope.newCategory.id);
-                        if (index !== -1) {
-                            $scope.categories[index] = response.data.data; // Cập nhật danh sách
-                        }
+                        ApiService.get(categoryApiUrl)
+                        .then(function (response) {
+                            $scope.categories = response.data; // Gắn danh sách danh mục
+                        })
+                        .catch(function (error) {
+                            console.error('Lỗi khi gọi API danh mục:', error);
+                            $scope.errorMessage = 'Không thể tải danh sách danh mục.';
+                        });
+
                         $scope.newCategory = {}; // Reset form
                         $scope.editableCategory = null; // Hủy trạng thái chỉnh sửa
                     } else {
