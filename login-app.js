@@ -56,14 +56,18 @@ app.controller('AuthController', function($scope, $http, $window) {
 
     // Xử lý đăng ký
     $scope.register = function() {
-        $http.post('http://localhost:8080/auth/register', $scope.registerData)
-            .then(function(response) {
-                $scope.registerMessage = "Registration successful!";
-            })
-            .catch(function(error) {
-                $scope.registerMessage = error.data && error.data.message
-                    ? "Registration failed: " + error.data.message
-                    : "Registration failed: Unknown error";
-            });
+        $http.post('http://localhost:8080/auth/register', $scope.registerData, {
+            transformResponse: function(data) {
+                // Trả về dữ liệu gốc mà không parse
+                return data;
+            }
+        }).then(function(response) {
+            $scope.registerMessage = "Registration successful!";
+        }).catch(function(error) {
+            console.error("Error:", error);
+            $scope.registerMessage = error.data && error.data.message
+                ? "Registration failed: " + error.data.message
+                : "Registration failed: Unknown error";
+        });
     };
 });
