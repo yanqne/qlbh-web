@@ -258,13 +258,6 @@ app.controller('ProductController', ['$scope', 'ApiService', function ($scope, A
         formData.append("categoryId", $scope.newProduct.categoryId);
         formData.append("price", $scope.newProduct.price);
         formData.append("quality", $scope.newProduct.quality);
-        if ($scope.newProduct.name) {
-            formData.append("name", $scope.newProduct.name);
-        } else {
-            console.error("Thiếu dữ liệu.");
-            alert("Tên không được để trống.");
-            return;
-        }
         // Kiểm tra xem có tệp không và thêm vào FormData
         if ($scope.newProduct.images) {
             formData.append("images", $scope.newProduct.images);

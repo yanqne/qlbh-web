@@ -81,28 +81,34 @@
 									<i class="fa fa-star"></i>
 									<i class="fa fa-star-o"></i>
 								</div>
-								<a class="review-link" href="#">10 Review(s) | Add your review</a>
+								<a class="review-link" href="#">{{product.quality}} Remain</a>
 							</div>
 							<div>
 								<h3 class="product-price">{{product.price}}</h3>
 								<span class="product-available"></span>
 							</div>
 							<p>{{product.description}}</p>
-
+					
+							<!-- Hiển thị thông báo nếu sản phẩm hết hàng -->
 							<div class="add-to-cart">
-								<button class="add-to-cart-btn" ng-click="addToCart()"><i class="fa fa-shopping-cart"></i> add to cart</button>
+								<p ng-if="product.quality === 0" class="text-danger">Sản phẩm hiện không còn hàng</p>
+								<button class="add-to-cart-btn" 
+										ng-click="addToCart()" 
+										ng-if="product.quality > 0">
+									<i class="fa fa-shopping-cart"></i> add to cart
+								</button>
 							</div>
-
+					
 							<ul class="product-btns">
 								<li><a href="#"><i class="fa fa-heart-o"></i> add to wishlist</a></li>
 								<li><a href="#"><i class="fa fa-exchange"></i> add to compare</a></li>
 							</ul>
-
+					
 							<ul class="product-links">
 								<li>Category:</li>
 								<li><a href="#">{{product.category.name}}</a></li>
 							</ul>
-
+					
 							<ul class="product-links">
 								<li>Share:</li>
 								<li><a href="#"><i class="fa fa-facebook"></i></a></li>
@@ -110,9 +116,9 @@
 								<li><a href="#"><i class="fa fa-google-plus"></i></a></li>
 								<li><a href="#"><i class="fa fa-envelope"></i></a></li>
 							</ul>
-
 						</div>
 					</div>
+					
 					<!-- /Product details -->
 
 					<!-- Product tab -->

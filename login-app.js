@@ -49,8 +49,8 @@ app.controller('AuthController', function($scope, $http, $window) {
                 // Xử lý lỗi đăng nhập
                 $scope.loginMessage = error.data && error.data.message
                     ? "Login failed: " + error.data.message
-                    : "Login failed: Unknown error";
-                console.error('Login error:', error);
+                    : "Login failed: Sai tên đăng nhập hoặc mật khẩu";
+                console.error('Thất bại:', error);
             });
     };
 

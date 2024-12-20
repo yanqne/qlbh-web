@@ -76,7 +76,7 @@
                         <td>{{ order.account.username }}</td>
                         <td>{{ order.createDate | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
                         <td>{{ order.address }}</td>
-                        <td>{{ order.totalPrice }}</td>
+                        <td>{{ order.totalPrice |  currency }}</td>
                         <td>
                             <!-- Dropdown for status -->
                             <select ng-model="order.status" ng-options="status for status in ['pending', 'success', 'failed']" 

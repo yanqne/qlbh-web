@@ -20,14 +20,35 @@ app.directive('navigationSection', function () {
 })
 const categoryUrl = 'http://localhost:8080/admin/categories/index'
 const productUrl = 'http://localhost:8080/admin/product/index';
+const orderuser = 'http://localhost:8080/order/list-by-account';
 // Service để xử lý API
-app.service('ApiService', ['$http', function ($http) {
+app.service('ApiService', ['$http', '$window', function ($http, $window) {
+    const token = $window.localStorage.getItem('token');
+
+    // Cấu hình mặc định cho tất cả các yêu cầu HTTP
+    const defaultHeaders = token ? {
+        'Authorization': 'Bearer ' + token
+    } : {};
+
     this.get = function (url) {
-        return $http.get(url);
+        return $http.get(url, { headers: defaultHeaders });
     };
 
     this.post = function (url, data) {
         return $http.post(url, data);
+    };
+    this.put = function (url, data, config = {}) {
+        if (data instanceof FormData) {
+            // Nếu là FormData, không cần chỉ định Content-Type vì AngularJS sẽ tự động thiết lập là multipart/form-data
+            config.headers = defaultHeaders || {};
+            config.headers['Content-Type'] = undefined;  // Để AngularJS tự thiết lập Content-Type là multipart/form-data
+        } else {
+            // Nếu không phải FormData, thiết lập Content-Type là application/json
+            config.headers = defaultHeaders || {};
+            config.headers['Content-Type'] = 'application/json';
+        }
+
+        return $http.put(url, data, config);
     };
 }]);
 app.service('AuthService', function () {
@@ -492,10 +513,10 @@ app.controller('OrderController', function ($scope, OrderService, CartService, A
         ApiService.get(`http://localhost:8080/admin/product/edit/${item.id}`)
             .then(function (response) {
                 if (response.success = 200) {
-                    if(response.data.quality<item.quantity){
+                    if (response.data.quality < item.quantity) {
                         alert("Sản phẩm không đủ số lượng")
                         item.quantity = response.data.quality
-                    }else{
+                    } else {
                         CartService.updateCart(item); // Cập nhật lại giỏ hàng trong CartService
                         $scope.calculateTotal(); // Tính lại tổng tiền
                     }
@@ -556,3 +577,110 @@ app.controller('MainController', function ($scope, $window) {
         $window.location.href = '/Admin/Admin-Product.html'; // Đường dẫn tới trang admin
     };
 });
+app.controller('OrderController1', ['$scope', 'ApiService', function ($scope, ApiService) {
+    $scope.getStatusText = function (status) {
+        switch (status) {
+            case 'success':
+                return 'Thành công';
+            case 'failed':
+                return 'Đã huỷ';
+            case 'pending':
+                return 'Đang xử lý';
+            default:
+                return 'Không xác định'; // Trường hợp trạng thái không rõ
+        }
+    };
+    $scope.orders = [];
+    $scope.errorMessage = null;
+    $scope.successMessage = null;
+    const username = localStorage.getItem('username');
+    // Gọi API để lấy danh sách đơn hàng
+    ApiService.get(`http://localhost:8080/order/list-by-account/${username}`)
+        .then(function (response) {
+            $scope.orders = response.data; // Gán danh sách đơn hàng vào scope         
+        })
+        .catch(function (error) {
+            console.error('Lỗi khi gọi API đơn hàng:', error);
+            $scope.errorMessage = 'Đã xảy ra lỗi khi tải danh sách đơn hàng.';
+        });
+    $scope.viewOrderDetails = function (orderId) {
+        window.location.href = `OrderDetails.html?orderId=${orderId}`;
+    };
+
+    // Cập nhật trạng thái đơn hàng
+    $scope.updateOrderStatus = function (orderId, status) {
+        const userConfirmed = window.confirm("Bạn có chắc chắn muốn huỷ đơn hàng này không?");
+    if (!userConfirmed) {
+        return; // Người dùng từ chối, không tiếp tục
+    }
+        const statusData = {
+            status: "failed" // Trạng thái mới (pending, success, or failed)
+        };
+
+        ApiService.put(`http://localhost:8080/order/update-status/${orderId}`, statusData) // Sử dụng PUT để cập nhật trạng thái
+            .then(function (response) {
+                $scope.successMessage = 'Cập nhật trạng thái đơn hàng thành công!';
+                $scope.errorMessage = null;
+                console.log(response.data);
+                // Cập nhật lại trạng thái của đơn hàng trong danh sách
+                ApiService.get(`http://localhost:8080/order/list-by-account/${username}`)
+                .then(function (response) {
+                    $scope.orders = response.data; // Gán danh sách đơn hàng vào scope         
+                })
+                .catch(function (error) {
+                    console.error('Lỗi khi gọi API đơn hàng:', error);
+                    $scope.errorMessage = 'Đã xảy ra lỗi khi tải danh sách đơn hàng.';
+                });
+            })
+            .catch(function (error) {
+                $scope.errorMessage = 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng.';
+                $scope.successMessage = null;
+                console.error(error);
+            });
+    };
+}]);
+app.controller('OrderDetailController', ['$scope', '$http', '$location', '$window', function ($scope, $http, $location, $window) {
+    $scope.getStatusText = function (status) {
+        switch (status) {
+            case 'success':
+                return 'Thành công';
+            case 'failed':
+                return 'Đã huỷ';
+            case 'pending':
+                return 'Đang xử lý';
+            default:
+                return 'Không xác định'; // Trường hợp trạng thái không rõ
+        }
+    };
+    const apiUrl = 'http://localhost:8080/order-detail/list-by-order';
+    $scope.orderDetails = [];
+    $scope.errorMessage = null;
+
+    const token = $window.localStorage.getItem('token');
+
+    // Lấy orderId từ URL
+    const urlParams = new URLSearchParams($location.absUrl().split('?')[1]);
+    const orderId = urlParams.get('orderId');
+
+    // Gọi API để lấy chi tiết đơn hàng
+    if (orderId) {
+        $http.get(`${apiUrl}/${orderId}`, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(function (response) {
+                if (response.data) {
+                    $scope.orderDetails = response.data; // Gán chi tiết đơn hàng vào scope
+                } else {
+                    $scope.errorMessage = 'Không thể tải chi tiết đơn hàng.';
+                }
+            })
+            .catch(function (error) {
+                console.error('Lỗi khi gọi API chi tiết đơn hàng:', error);
+                $scope.errorMessage = 'Đã xảy ra lỗi khi tải chi tiết đơn hàng.';
+            });
+    } else {
+        $scope.errorMessage = 'Không tìm thấy orderId trong URL.';
+    }
+}]);

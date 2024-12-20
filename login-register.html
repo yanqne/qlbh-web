@@ -36,12 +36,14 @@
     </div>
 
     <!-- Form Đăng Ký -->
-    <div ng-show="activeForm === 'register'" class="card p-4">
+    <div ng-show="activeForm === 'register'" class="card p-4" name="registerForm" novalidate>
         <h2 class="text-center">Register</h2>
         <form ng-submit="register()">
             <div class="mb-3">
                 <label for="reg-username" class="form-label">Username</label>
-                <input type="text" id="reg-username" class="form-control" ng-model="registerData.username" required>
+                <input type="text" id="reg-username" class="form-control" ng-model="registerData.username" name="username" required ng-minlength="4">
+        <small class="text-danger" ng-show="registerForm.username.$touched && registerForm.username.$error.required">Username is required.</small>
+        <small class="text-danger" ng-show="registerForm.username.$touched && registerForm.username.$error.minlength">Username must be at least 4 characters.</small>
             </div>
             <div class="mb-3">
                 <label for="reg-password" class="form-label">Password</label>
