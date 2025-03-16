@@ -27,47 +27,122 @@ app.controller('AuthController', function($scope, $http, $window) {
 
     // Xử lý đăng nhập
     $scope.login = function() {
+        // Kiểm tra nếu username hoặc password bị trống
+        if (!$scope.loginData || !$scope.loginData.username || !$scope.loginData.password) {
+            if (!$scope.loginData.username && !$scope.loginData.password) {
+                $scope.loginMessage = "yêu cầu nhập thông tin";
+            } else if (!$scope.loginData.username) {
+                $scope.loginMessage = "Username không được để trống";
+            } else {
+                $scope.loginMessage = "Password không được để trống";
+            }
+            return;
+        }
+    
+        // Kiểm tra username không hợp lệ (có ký tự đặc biệt hoặc chỉ chứa khoảng trắng)
+        if (/[^a-zA-Z0-9]/.test($scope.loginData.username)) {
+            $scope.loginMessage = "Username không hợp lệ";
+            return;
+        }
+        
+        // Kiểm tra password có ít nhất 6 ký tự
+        if ($scope.loginData.password.length < 6) {
+            $scope.loginMessage = "Password phải có ít nhất 6 ký tự";
+            return;
+        }
+    
+        // Gửi yêu cầu đăng nhập tới server
         $http.post('http://localhost:8080/auth/login', $scope.loginData)
             .then(function(response) {
-                // Lấy token và vai trò từ phản hồi
                 const token = response.data.token;
-                const isAdmin = response.data.admin; // API cần trả về `admin` flag.
+                const isAdmin = response.data.admin;
                 const username = $scope.loginData.username;
-                // Lưu token vào localStorage
                 localStorage.setItem('token', token);
-                localStorage.setItem('isAdmin', isAdmin)
+                localStorage.setItem('isAdmin', isAdmin);
                 localStorage.setItem('username', username);
-                // Điều hướng dựa vào vai trò
-                alert("Đăng nhập thành công")
+                alert("Đăng nhập thành công");
                 if (isAdmin) {
-                    $window.location.href = '/Admin/Admin-Product.html'; // Đường dẫn tới trang admin
+                    $window.location.href = '/Admin/Admin-Product.html';
                 } else {
-                    $window.location.href = 'store.html'; // Đường dẫn tới trang store
+                    $window.location.href = 'store.html';
                 }
             })
             .catch(function(error) {
-                // Xử lý lỗi đăng nhập
                 $scope.loginMessage = error.data && error.data.message
-                    ? "Login failed: " + error.data.message
-                    : "Login failed: Sai tên đăng nhập hoặc mật khẩu";
+                    ? "Login thất bại: " + error.data.message + "'"
+                    : "Hiển thị lỗi 'Login thất bại: Sai tên đăng nhập hoặc mật khẩu'";
                 console.error('Thất bại:', error);
             });
     };
+    
 
     // Xử lý đăng ký
     $scope.register = function() {
-        $http.post('http://localhost:8080/auth/register', $scope.registerData, {
-            transformResponse: function(data) {
-                // Trả về dữ liệu gốc mà không parse
-                return data;
-            }
-        }).then(function(response) {
-            $scope.registerMessage = "Registration successful!";
-        }).catch(function(error) {
-            console.error("Error:", error);
-            $scope.registerMessage = error.data && error.data.message
-                ? "Registration failed: " + error.data.message
-                : "Registration failed: Unknown error";
-        });
+        $scope.registerMessage = ""; // Xóa thông báo cũ
+    
+        // Nếu không có dữ liệu, hiển thị lỗi yêu cầu nhập
+        if (!$scope.registerData) {
+            $scope.registerMessage = "Vui lòng nhập đầy đủ thông tin.";
+            return;
+        }
+    
+        const { username, password, email, fullname } = $scope.registerData;
+    
+        if (!fullname || fullname.trim() === "") {
+            $scope.registerMessage = "Fullname không được để trống.";
+            return;
+        }
+    
+        if (!username || username.trim() === "") {
+            $scope.registerMessage = "Username không được để trống.";
+            return;
+        }
+    
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            $scope.registerMessage = "Username không hợp lệ.";
+            return;
+        }
+    
+        if (!password || password.trim() === "") {
+            $scope.registerMessage = "Password không được để trống.";
+            return;
+        }
+    
+        if (password.length < 6) {
+            $scope.registerMessage = "Password phải có ít nhất 6 ký tự.";
+            return;
+        }
+    
+        if (!email || email.trim() === "") {
+            $scope.registerMessage = "Email không được để trống.";
+            return;
+        }
+    
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            $scope.registerMessage = "Email không hợp lệ.";
+            return;
+        }
+    
+        $http.post('http://localhost:8080/auth/register', $scope.registerData)
+            .then(function(response) {
+                alert("Đăng ký thành công");
+                window.location.href = "login-register.html";
+            })
+            .catch(function(error) {
+                console.error("Lỗi:", error);
+                if (error.data && error.data.message) {
+                    const errorMsg = error.data.message;
+                    if (errorMsg.includes("Username đã tồn tại")) {
+                        $scope.registerMessage = "Username đã tồn tại.";
+                    } else if (errorMsg.includes("Email đã được sử dụng")) {
+                        $scope.registerMessage = "Email đã được sử dụng.";
+                    } else {
+                        $scope.registerMessage = "Đăng ký thất bại: " + errorMsg;
+                    }
+                } else {
+                    $scope.registerMessage = "Đăng ký thất bại: Lỗi không xác định.";
+                }
+            });
     };
+    
 });
