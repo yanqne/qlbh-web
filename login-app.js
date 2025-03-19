@@ -77,7 +77,7 @@ app.controller('AuthController', function($scope, $http, $window) {
     
 
     // Xử lý đăng ký
-    $scope.register = function() {
+    $scope.register = async function() {
         $scope.registerMessage = ""; // Xóa thông báo cũ
     
         // Nếu không có dữ liệu, hiển thị lỗi yêu cầu nhập
@@ -123,14 +123,15 @@ app.controller('AuthController', function($scope, $http, $window) {
             return;
         }
     
-        $http.post('http://localhost:8080/auth/register', $scope.registerData)
-            .then(function(response) {
-                alert("Đăng ký thành công");
-                window.location.href = "login-register.html";
+        await $http.post('http://localhost:8080/auth/register', $scope.registerData)
+            .then(console.log("Test"),
+                function() {
+                $scope.registerMessage = "Registration successful!";
             })
-            .catch(function(error) {
+            .catch(console.log(error),function(error) {
                 console.error("Lỗi:", error);
                 if (error.data && error.data.message) {
+                    console.log(error.data)
                     const errorMsg = error.data.message;
                     if (errorMsg.includes("Username đã tồn tại")) {
                         $scope.registerMessage = "Username đã tồn tại.";
