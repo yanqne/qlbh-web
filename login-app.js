@@ -70,7 +70,7 @@ app.controller('AuthController', function($scope, $http, $window) {
             .catch(function(error) {
                 $scope.loginMessage = error.data && error.data.message
                     ? "Login thất bại: " + error.data.message + "'"
-                    : "Hiển thị lỗi 'Login thất bại: Sai tên đăng nhập hoặc mật khẩu'";
+                    : "Login failed: Sai tên đăng nhập hoặc mật khẩu";
                 console.error('Thất bại:', error);
             });
     };
@@ -123,27 +123,28 @@ app.controller('AuthController', function($scope, $http, $window) {
             return;
         }
     
-        await $http.post('http://localhost:8080/auth/register', $scope.registerData)
-            .then(console.log("Test"),
-                function() {
-                $scope.registerMessage = "Registration successful!";
-            })
-            .catch(console.log(error),function(error) {
-                console.error("Lỗi:", error);
-                if (error.data && error.data.message) {
-                    console.log(error.data)
-                    const errorMsg = error.data.message;
-                    if (errorMsg.includes("Username đã tồn tại")) {
-                        $scope.registerMessage = "Username đã tồn tại.";
-                    } else if (errorMsg.includes("Email đã được sử dụng")) {
-                        $scope.registerMessage = "Email đã được sử dụng.";
-                    } else {
-                        $scope.registerMessage = "Đăng ký thất bại: " + errorMsg;
-                    }
+        $http.post('http://localhost:8080/auth/register', $scope.registerData)
+        .then(function(response) {
+            console.log("Test"); // In ra để kiểm tra
+            $scope.registerMessage = "Registration successful!";
+        })
+        .catch(function(error) {
+            console.error("Lỗi:", error);
+            if (error.data && error.data.error) {
+                console.log(error.data);
+                const errorMsg = error.data.error; // Lấy lỗi từ API trả về
+                if (errorMsg.includes("Username already exists")) {
+                    $scope.registerMessage = "Username đã tồn tại.";
+                } else if (errorMsg.includes("Email already exists")) {
+                    $scope.registerMessage = "Email đã được sử dụng.";
                 } else {
-                    $scope.registerMessage = "Đăng ký thất bại: Lỗi không xác định.";
+                    $scope.registerMessage = "Đăng ký thất bại: " + errorMsg;
                 }
-            });
+            } else {
+                $scope.registerMessage = "Đăng ký thất bại: Lỗi không xác định.";
+            }
+        });
+    
     };
     
 });
